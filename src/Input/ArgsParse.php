@@ -49,7 +49,7 @@ class ArgsParse
                    $value = substr($tmp, 1);
                 }
 
-                // 指针后移
+                // 返回当前指针值
                 $next = current($args);
 
                 // 判断下一个元素是否为输入值
@@ -93,7 +93,7 @@ class ArgsParse
 
     /**
      * @param $val
-     * 
+     *
      * @return bool|string
      */
     protected static function valueFilter($val)
