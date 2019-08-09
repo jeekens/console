@@ -1,0 +1,24 @@
+{
+  "name": "jeekens/console",
+  "type": "library",
+  "version": "v1.0.0",
+  "keywords": [
+    "php",
+    "swoole",
+    "jeekens",
+    "console"
+  ],
+  "description": "jeekens console component",
+  "license": "Apache-2.0",
+  "require": {
+    "php": ">7.2",
+    "doctrine/annotations": "1.6.1",
+    "jeekens/basics": "~1.0.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "Jeekens\\Console\\": "src/"
+    }
+  },
+  "minimum-stability": "dev"
+}
