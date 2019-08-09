@@ -22,20 +22,6 @@ interface InputInterface
     public function read(string $question = '', bool $nl = false): string;
 
     /**
-     * 获取执行的脚本
-     *
-     * @return string
-     */
-    public function getScript(): string;
-
-    /**
-     * 获取执行的命令
-     *
-     * @return string
-     */
-    public function getCommand(): string;
-
-    /**
      * 获取输入参数集合
      *
      * @return array
