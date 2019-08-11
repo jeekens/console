@@ -177,4 +177,20 @@ class Input
         return isset($this->arrayOpts[$key]);
     }
 
+    /**
+     * @param array $keys
+     *
+     * @return bool
+     */
+    public function hasOneOpts(array $keys)
+    {
+        foreach ($keys as $key) {
+            if (isset($this->arrayOpts[$key])) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
 }

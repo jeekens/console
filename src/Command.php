@@ -85,6 +85,8 @@ final class Command
     private static $_singleton;
 
     /**
+     * 初始化并创建一个命令行工具对象，此时可以注入全局命令
+     *
      * @param null $globalCommand
      * @param Input|null $input
      * @param Output|null $output
@@ -110,6 +112,8 @@ final class Command
     }
 
     /**
+     * 获取一个命令行工具对象，如果不存在则自动创建
+     *
      * @return Command
      *
      * @throws CommandNameParseException
@@ -120,6 +124,8 @@ final class Command
     }
 
     /**
+     * 获取当前命令的名称，此方法只有boot后才能获取到正确的值
+     *
      * @return string|null
      *
      * @throws CommandNameParseException
@@ -130,6 +136,8 @@ final class Command
     }
 
     /**
+     * 获取全部命令信息
+     *
      * @return array
      *
      * @throws CommandNameParseException
@@ -140,6 +148,8 @@ final class Command
     }
 
     /**
+     * 获取全部支持的命令
+     *
      * @return array
      *
      * @throws CommandNameParseException
@@ -150,32 +160,114 @@ final class Command
     }
 
     /**
+     * 获取当前的命令程序入口脚本
+     *
      * @return string|null
      *
      * @throws CommandNameParseException
      */
     public static function getScript()
     {
-        return self::getCommand()->input
+        return self::getCommand()
+            ->input()
             ->getScript();
     }
 
     /**
+     * 获取短选项值
+     *
+     * @param null $key
+     * @param null $default
+     *
+     * @return array|mixed|null
+     *
+     * @throws CommandNameParseException
+     */
+    public static function getShortOpts($key = null, $default = null)
+    {
+        return self::getCommand()
+            ->input()
+            ->getShortOpts($key, $default);
+    }
+
+    /**
+     * 获取长选项值
+     *
+     * @param null $key
+     * @param null $default
+     *
+     * @return array|mixed|null
+     *
+     * @throws CommandNameParseException
+     */
+    public static function getLongOpts($key = null, $default = null)
+    {
+        return self::getCommand()
+            ->input()
+            ->getLongOpts($key, $default);
+    }
+
+    /**
+     * 判断选项是否存在，不区分长选项还是短选项
+     *
+     * @param string $key
+     *
+     * @return bool
+     *
+     * @throws CommandNameParseException
+     */
+    public static function hasOpt(string $key)
+    {
+        return self::getCommand()
+            ->input()
+            ->hasArrayOpts($key);
+    }
+
+    /**
+     * 判断多个选项是否存在，当其中一个存在是则返回true，这对于-n, --name这种长选项+短选项的形式有很大的帮助
+     *
+     * @param array $keys
+     *
+     * @return bool
+     *
+     * @throws CommandNameParseException
+     */
+    public static function hasOneOpt(array $keys)
+    {
+        return self::getCommand()
+            ->input()
+            ->hasOneOpts($keys);
+    }
+
+    /**
+     * 获取数组选项值
+     *
+     * @param null $key
+     * @param null $default
+     *
+     * @return array|mixed|null
+     *
+     * @throws CommandNameParseException
+     */
+    public static function getArrayOpts($key = null, $default = null)
+    {
+        return self::getCommand()
+            ->input()
+            ->getArrayOpts($key, $default);
+    }
+
+    /**
+     * 获取当前目录
+     *
      * @return string|null
      *
      * @throws CommandNameParseException.
      */
     public static function getPwd()
     {
-        return self::getCommand()->input
+        return self::getCommand()
+            ->input()
             ->getPwd();
-    }
-
-
-
-    public static function option(string $key, $default = null)
-    {
-        //TODO Get option value by key.
     }
 
     /**
@@ -203,6 +295,8 @@ final class Command
     }
 
     /**
+     * 注册一个闭包命令
+     *
      * @param $name
      * @param $closure
      * @param string|null $describe
@@ -237,6 +331,8 @@ final class Command
     }
 
     /**
+     * 启动命令行工具
+     *
      * @throws CommandNotFoundException
      * @throws Throwable
      */
@@ -246,6 +342,8 @@ final class Command
     }
 
     /**
+     * 判断是否存在选项值，假如参数-n, --name，传入-n=Tom，则判断n或者name都会返回true
+     *
      * @param string $key
      *
      * @return bool
@@ -315,33 +413,6 @@ final class Command
         } else {
             $this->command = 'help';
         }
-    }
-
-    /**
-     * @param string $key
-     *
-     * @return bool
-     */
-    private function isHaveOption(string $key): bool
-    {
-        $options = $this->commands[$this->command]['options'] ?? [];
-
-        if (empty($this->command) || empty($options)) {
-            return $this->input->hasArrayOpts($key);
-        }
-
-        foreach ($options as $option) {
-            if (is_array($option) && array_search($key, $option) !== false) {
-                foreach ($option as $item) {
-                    if ($this->input->hasArrayOpts($item)) {
-                        return true;
-                    }
-                }
-                return false;
-            }
-        }
-
-        return $this->input->hasArrayOpts($key);
     }
 
     /**
@@ -607,6 +678,26 @@ final class Command
     private function returnCommandName()
     {
         return $this->command;
+    }
+
+    /**
+     * 返回输入流对象
+     *
+     * @return Input|null
+     */
+    private function input()
+    {
+        return $this->input;
+    }
+
+    /**
+     * 返回输出流对象
+     *
+     * @return Output|null
+     */
+    private function output()
+    {
+        return $this->output;
     }
 
 }
