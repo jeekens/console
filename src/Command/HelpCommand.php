@@ -49,22 +49,22 @@ class HelpCommand implements CommandInterface
         $info = Command::getCommandInfos()['help'];
 
         if (! empty($info['command']->describe)) {
-            echo Modifier::make('Command Describe: ', Modifier::COLOR_GREEN),PHP_EOL;
+            echo \modifier('Command Describe: ', Modifier::COLOR_GREEN),PHP_EOL;
             echo $info['command']->describe,PHP_EOL,PHP_EOL;
         }
 
         if (! empty($info['command']->usage)) {
-            echo Modifier::make('Usage: ', Modifier::COLOR_GREEN),PHP_EOL;
+            echo \modifier('Usage: ', Modifier::COLOR_GREEN),PHP_EOL;
             echo $info['command']->usage,PHP_EOL,PHP_EOL;
         }
 
         if (! empty($info['command']->arguments)) {
             $table = new Table();
-            echo Modifier::make('Arguments: ', Modifier::COLOR_GREEN),PHP_EOL;
+            echo \modifier('Arguments: ', Modifier::COLOR_GREEN),PHP_EOL;
             foreach ($info['command']->arguments as $key => $val) {
                 $table
                     ->addRow([
-                        Modifier::make('Arguments'.((string)($key+1)), Modifier::COLOR_RED),
+                        \modifier('Arguments'.((string)($key+1)), Modifier::COLOR_RED),
                         $val
                     ]);
             }
@@ -73,11 +73,11 @@ class HelpCommand implements CommandInterface
 
         if (! empty($info['command']->options)) {
             $table = new Table();
-            echo Modifier::make('Options: ', Modifier::COLOR_GREEN),PHP_EOL;
+            echo \modifier('Options: ', Modifier::COLOR_GREEN),PHP_EOL;
             foreach ($info['command']->options as $key => $val) {
                 $table
                     ->addRow([
-                        Modifier::make($key, Modifier::COLOR_YELLOW),
+                        \modifier($key, Modifier::COLOR_YELLOW),
                         $val
                     ]);
             }

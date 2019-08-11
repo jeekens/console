@@ -2,7 +2,7 @@
 
 use Jeekens\Console\Output\Modifier;
 
-if (function_exists('modifier')) {
+if (! function_exists('modifier')) {
     /**
      * 命令行文字修饰方法
      *
