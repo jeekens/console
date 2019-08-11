@@ -1,12 +1,12 @@
-<?php
+<?php declare(strict_types=1);
 
 
 namespace Jeekens\Console\Command;
 
 
 use Jeekens\Console\Command;
-use Jeekens\Console\Output\Modifier;
 use Jeekens\Console\Output\Table;
+use Jeekens\Console\Output\Modifier;
 use Jeekens\Console\CommandInterface;
 
 class HelpCommand implements CommandInterface
