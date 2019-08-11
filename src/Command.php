@@ -342,20 +342,6 @@ final class Command
     }
 
     /**
-     * 判断是否存在选项值，假如参数-n, --name，传入-n=Tom，则判断n或者name都会返回true
-     *
-     * @param string $key
-     *
-     * @return bool
-     *
-     * @throws CommandNameParseException
-     */
-    public static function hasOption(string $key): bool
-    {
-        return self::getCommand()->isHaveOption($key);
-    }
-
-    /**
      * @throws CommandNotFoundException
      *
      * @throws Throwable
@@ -437,14 +423,14 @@ final class Command
                 if (is_string($option)) {
                     $callback = $option . 'Action';
                     if (method_exists($command, $callback)
-                        && $this->isHaveOption($option)) {
+                        && self::hasOpt($option)) {
                         $command->$callback();
                     }
                 } elseif (is_array($option)) {
                     foreach ($option as $alias) {
                         $callback = $alias . 'Action';
                         if (method_exists($command, $callback)
-                            && $this->isHaveOption($alias)) {
+                            && self::hasOneOpt($option)) {
                             $command->$callback();
                             break 1;
                         }
