@@ -251,13 +251,17 @@ class Modifier
         return array_keys(self::$setting);
     }
 
-
+    /**
+     * 启用样式渲染
+     */
     public static function enableRender()
     {
         self::$isRender = true;
     }
 
-
+    /**
+     * 关闭样式渲染
+     */
     public static function disableRender()
     {
         self::$isRender = false;

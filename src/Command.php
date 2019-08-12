@@ -75,14 +75,15 @@ final class Command
     /**
      * @var array
      */
-    private static $defaultGlobalOptions = [
+    private static $globalOptions = [
         '-h, --help' => 'help',
+        '--no-style' => 'noStyle',
     ];
 
     /**
      * @var array
      */
-    private static $globalOptions = [];
+    private static $groupGlobalOptions = [];
 
     /**
      * @var self;
@@ -382,63 +383,91 @@ final class Command
      */
     public static function boot()
     {
-        return self::getCommand()->bootstrap();
+        return self::getCommand()
+            ->bootstrap();
     }
 
     /**
      * 向控制台输出一段绿色的文字
      *
      * @param string $info
-     * @param string|null $bg
-     * @param array|null $style
-     * @param bool $nl
-     * @param bool $quit
+     * @param bool|int $quit
      *
      * @return int
      *
      * @throws Exception\Exception
      * @throws Exception\UnknownColorException
      */
-    public static function info(string $info, string $bg = null, ?array $style = null, bool $nl = true, bool $quit = false)
+    public static function info(string $info, $quit = false)
     {
-        return self::styleLine($info, Modifier::COLOR_GREEN, $bg, $style, $nl, $quit);
+        return self::styleLine($info, Modifier::COLOR_GREEN, null, null, $quit);
     }
 
     /**
      * 输出一个无格式的文本
      *
      * @param string $info
-     * @param bool $nl
-     * @param bool $quit
+     * @param bool|int $quit
      *
      * @return int
      *
      * @throws Exception\Exception
      * @throws Exception\UnknownColorException
      */
-    public static function line(string $info, $nl = true, bool $quit = false)
+    public static function line(string $info, $quit = false)
+    {
+        return self::write($info, true, $quit);
+    }
+
+    /**
+     * 输出数据
+     *
+     * @param $messages
+     * @param bool $nl
+     * @param bool|int $quit
+     * @param bool $isErr
+     *
+     * @return int
+     *
+     * @throws Exception\Exception
+     * @throws Exception\UnknownColorException
+     */
+    public static function write($messages, $nl = true, $quit = false, bool $isErr = false)
     {
         return self::getCommand()->output()
-            ->write($info, $nl, $quit);
+            ->write($messages, $nl, $quit, $isErr);
     }
 
     /**
      * 向控制台输出一段红色的文字
      *
      * @param string $info
-     * @param string|null $bg
-     * @param array|null $style
-     * @param bool $nl
-     * @param bool $quit
+     * @param bool|int $quit
      *
      * @return int
      *
      * @throws Exception\Exception
      * @throws Exception\UnknownColorException
      */
-    public static function error(string $info, string $bg = null, ?array $style = null, bool $nl = true, bool $quit = false)
+    public static function error(string $info, $quit = false)
     {
-        return self::styleLine($info, Modifier::COLOR_RED, $bg, $style, $nl, $quit);
+        return self::styleLine($info, Modifier::COLOR_RED, null, null, $quit);
+    }
+
+    /**
+     * 向控制台输出一段黄色的文字
+     *
+     * @param string $info
+     * @param bool|int $quit
+     *
+     * @return int
+     *
+     * @throws Exception\Exception
+     * @throws Exception\UnknownColorException
+     */
+    public static function warning(string $info, $quit = false)
+    {
+        return self::styleLine($info, Modifier::COLOR_YELLOW, null, null, $quit);
     }
 
     /**
@@ -448,18 +477,224 @@ final class Command
      * @param string|null $fg
      * @param string|null $bg
      * @param array|null $style
-     * @param bool $nl
-     * @param bool $quit
+     * @param bool|int $quit
      *
      * @return int
      *
      * @throws Exception\Exception
      * @throws Exception\UnknownColorException
      */
-    public static function styleLine(string $info, string $fg = null, string $bg = null, ?array $style = null, bool $nl = true, bool $quit = false)
+    public static function styleLine(string $info, string $fg = null, string $bg = null, ?array $style = null, $quit = false)
     {
-        return self::getCommand()->output()
-            ->write(modifier($info, $fg, $bg, $style), $nl, $quit);
+        return self::write(modifier($info, $fg, $bg, $style), true, $quit);
+    }
+
+    /**
+     * 询问用户并返回用户输入值，为空时返回默认值
+     *
+     * @param string $question
+     * @param string $default
+     *
+     * @return bool|string
+     *
+     * @throws Exception\Exception
+     * @throws Exception\UnknownColorException
+     */
+    public static function ask(string $question, string $default = '')
+    {
+        if (!$question = trim($question)) {
+            self::error('Question is empty!', 1);
+        }
+
+        if ($default !== '') {
+            $msg = ucfirst($question) . \modifier(' (Default: ' . $default . ')', Modifier::COLOR_GREEN);
+        } else {
+            $msg = ucfirst($question);
+        }
+
+        self::line($msg);
+        $value = self::read();
+
+        if ($value === '') {
+            return $default;
+        } else {
+            return $value;
+        }
+    }
+
+    /**
+     * 请求用户确认信息，只能输入yes(y) no(n)不区分大小写，如果输出有误则重新询问
+     *
+     * @param string $message
+     * @param int $limit
+     *
+     * @return bool|mixed
+     *
+     * @throws Exception\Exception
+     * @throws Exception\UnknownColorException
+     */
+    public static function confirm(string $message, int $limit = 0)
+    {
+        if (!$message = trim($message)) {
+            self::error('Message is empty!', 1);
+        }
+
+        $confirm = ['y' => true, 'yes' => true, 'no' => false, 'n' => false,];
+        $message = ucfirst($message) . \modifier(' [yes(y) OR no(n)]', Modifier::COLOR_GREEN);
+        $i = 0;
+
+        confirm:
+
+        $i++;
+        self::line($message);
+        $value = strtolower(self::read(3));
+
+        if (isset($confirm[$value])) {
+            return $confirm[$value];
+        }
+
+        if ($limit == 0 || $i < $limit) goto confirm;
+
+        return false;
+    }
+
+    /**
+     * 多重选择
+     *
+     * @param string $question
+     * @param array $choices
+     * @param int|null $defaultIndex
+     *
+     * @return bool|int|string|null
+     *
+     * @throws Exception\Exception
+     * @throws Exception\UnknownColorException
+     */
+    public static function choice(string $question, array $choices, ?int $defaultIndex = null)
+    {
+        if (!$question = trim($question)) {
+            self::error('Question is empty!', 1);
+        }
+
+        if (empty($choices)) {
+            self::error('Choices is empty!', 1);
+        }
+
+        self::line(ucfirst($question));
+        $i = 1;
+
+        foreach ($choices as $value) {
+            self::line(
+                \modifier("({$i}). ", Modifier::COLOR_GREEN).$value
+            );
+            $i++;
+        }
+
+        $index = self::read(3);
+
+        if (isset($choices[$index])) {
+            return $index;
+        } else {
+            return $defaultIndex;
+        }
+    }
+
+    /**
+     * 循环提问，并用闭包对输入值进行验证，如果传入第三个参数则表示循环多少次后则强制退出询问
+     *
+     * @param string $question
+     * @param Closure $closure
+     * @param int $limit
+     *
+     * @return bool|string
+     *
+     * @throws Exception\Exception
+     * @throws Exception\UnknownColorException
+     */
+    public static function loopAsk(string $question, Closure $closure, int $limit = 0)
+    {
+        if (!$question = trim($question)) {
+            self::error('Question is empty!', 1);
+        }
+
+        $question = ucfirst($question);
+        $error = null;
+        $i = 0;
+
+        ask:
+
+        $i++;
+        $quit = false;
+        self::line($question);
+        $value = self::read();
+
+        if ($closure($value, $error, $quit)) {
+            return $value;
+        }
+
+        if (is_string($error) && $error !== '') {
+            self::warning($error, $quit);
+        }
+
+        if ($limit == 0 || $i < $limit) goto ask;
+
+        return $value;
+    }
+
+
+
+    /**
+     * @see https://stackoverflow.com/questions/187736/command-line-password-prompt-in-php
+     *
+     * @param $prompt
+     *
+     * @return array|string
+     */
+    private static function hideInput($prompt)
+    {
+        $prompt = $prompt ? addslashes($prompt) : 'Enter:';
+
+        // at windows cmd.
+        if (preg_match('/^win/i', PHP_OS)) {
+            $vbFile = sys_get_temp_dir() . '/hidden_prompt_input.vbs';
+
+            file_put_contents($vbFile, sprintf('wscript.echo(InputBox("%s", "", "password here"))', $prompt));
+
+            $command  = 'cscript //nologo ' . escapeshellarg($vbFile);
+            $password = rtrim(shell_exec($command));
+            unlink($vbFile);
+
+            return $password;
+        }
+
+        // linux, unix, git-bash
+        if (scripted()) {
+            // COMMAND: sh -c 'read -p "Enter Password:" -s user_input && echo $user_input'
+            $command  = sprintf('sh -c "read -p \'%s\' -s user_input && echo $user_input"', $prompt);
+            $password = script($command, false);
+
+            print "\n";
+            return $password;
+        }
+
+        throw new \RuntimeException('Can not invoke bash shell env');
+    }
+
+    /**
+     * 读取输入流中的数据
+     *
+     * @param int $length
+     *
+     * @return bool|string
+     *
+     * @throws Exception\Exception
+     * @throws Exception\UnknownColorException
+     */
+    public static function read(int $length = 1024)
+    {
+        return self::getCommand()
+            ->input()
+            ->read($length);
     }
 
     /**
@@ -472,10 +707,10 @@ final class Command
     {
         if (!$this->isBoot()) {
             $this->isBoot = true;
-            $result= true;
+            $result = true;
             $this->parseCommand();
 
-            if (! empty($this->forwardCommand)) {
+            if (!empty($this->forwardCommand)) {
                 if (($forwardCommand = $this->commands[$this->forwardCommand] ?? null) ||
                     ($forwardCommand = $this->baseCommands[$this->forwardCommand] ?? null)) {
                     if ($forwardCommand['command'] instanceof Closure) {
@@ -490,7 +725,7 @@ final class Command
                 return false;
             }
 
-            if (! empty($this->command) && ($command = $this->commands[$this->command] ?? null) ||
+            if (!empty($this->command) && ($command = $this->commands[$this->command] ?? null) ||
                 ($command = $this->baseCommands[$this->command] ?? null)) {
 
                 if ($command['command'] instanceof Closure) {
@@ -499,10 +734,11 @@ final class Command
                     return $this->commandHandle($command);
                 }
 
-            } elseif (! empty($this->command)) {
+            } elseif (!empty($this->command)) {
                 self::error(
-                    sprintf('Command %s Notfound.', \modifier($this->command, Modifier::COLOR_RED, Modifier::COLOR_WHITE))
-                    , null, null, true, true);
+                    sprintf('Command %s Notfound.', \modifier($this->command, Modifier::COLOR_RED, Modifier::COLOR_WHITE)),
+                    1
+                );
             }
 
             return $result;
@@ -659,7 +895,8 @@ final class Command
                 }
             }
         } catch (InputCommandFormatException $e) {
-            echo \modifier($e->getMessage(), Modifier::COLOR_RED);die(1);
+            echo \modifier($e->getMessage(), Modifier::COLOR_RED);
+            die(1);
         }
 
         $this->input = $input;
@@ -727,8 +964,9 @@ final class Command
 
         if (empty($commandName)) {
             self::error(
-                sprintf('Command class "%s" name is empty or does not exist.', \modifier(get_class($command), Modifier::COLOR_RED, Modifier::COLOR_WHITE))
-            , null, null, true, true);
+                sprintf('Command class "%s" name is empty or does not exist.',
+                    \modifier(get_class($command), Modifier::COLOR_RED, Modifier::COLOR_WHITE
+                    )), 1);
         }
 
         if (isset($this->commands[$commandName])) {
@@ -791,8 +1029,10 @@ final class Command
 
         if (empty($info) || empty($info[1])) {
             self::error(
-                sprintf('Command name "%s" is unsupported. Must be "groupName:commandName".', \modifier($name, Modifier::COLOR_RED, Modifier::COLOR_WHITE))
-                , null, null, true, true);
+                sprintf('Command name "%s" is unsupported. Must be "groupName:commandName".',
+                    \modifier($name, Modifier::COLOR_RED, Modifier::COLOR_WHITE)),
+                1
+            );
         }
 
         return $info;

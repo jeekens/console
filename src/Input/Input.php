@@ -219,4 +219,14 @@ class Input
         return false;
     }
 
+    /**
+     * @param int $length
+     *
+     * @return bool|string
+     */
+    public function read(int $length = 1024)
+    {
+        return trim(fgets($this->inputStream, $length));
+    }
+
 }
