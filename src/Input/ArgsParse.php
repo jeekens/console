@@ -3,6 +3,8 @@
 
 namespace Jeekens\Console\Input;
 
+use Jeekens\Console\Exception\InputCommandFormatException;
+
 /**
  * Class ArgsParse
  *
@@ -17,20 +19,28 @@ class ArgsParse
 
     /**
      * @param array $args
-     *
+     * 
      * @return array
+     *
+     * @throws InputCommandFormatException
      */
     public static function flag(array $args)
     {
         $params = $shortOpts = $longOpts = $arrayOpts = [];
         $isArg = true;
         $nowOpt = '';
+        $command = false;
 
         while (false !== ($p = current($args))) {
             next($args);
 
             // 判断是否为一个选项
             if ($p{0} === '-') {
+
+                if (! $command) {
+                    throw new InputCommandFormatException('The format of command input should be "php commandFile.php command [parameters] [-p|--option]"');
+                }
+
                 $isArg = false;
                 $value = true;
                 $option = substr($p, 1); // 移除开头的-符号
@@ -93,6 +103,7 @@ class ArgsParse
                 $params[$name] = self::valueFilter($value);
             } else {
                 if ($isArg) {
+                    $command = true;
                     $params[] = $p;
                 } else {
                     if (strlen($nowOpt) > 1) {
