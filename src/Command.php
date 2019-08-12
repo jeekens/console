@@ -26,6 +26,11 @@ final class Command
     private $command;
 
     /**
+     * @var string|null
+     */
+    private $forwardCommand;
+
+    /**
      * @var array|null
      */
     private $commandGroup;
@@ -256,8 +261,17 @@ final class Command
             ->getArrayOpts($key, $default);
     }
 
-
-    public static function getParam($key= null, $default = null)
+    /**
+     * 获取命令输入的参数
+     *
+     * @param null $key
+     * @param null $default
+     *
+     * @return array|mixed|null
+     *
+     * @throws CommandNameParseException
+     */
+    public static function getParam($key = null, $default = null)
     {
         if (is_numeric($key) || is_string($key)) {
             return null;
@@ -354,7 +368,7 @@ final class Command
      */
     public static function boot()
     {
-        self::getCommand()->bootstrap();
+        return self::getCommand()->bootstrap();
     }
 
     /**
@@ -366,20 +380,38 @@ final class Command
     {
         if (!$this->isBoot()) {
             $this->isBoot = true;
+            $result= true;
             $this->parseCommand();
 
-            if (($command = $this->commands[$this->command] ?? null) ||
+            if (! empty($this->forwardCommand)) {
+                if (($forwardCommand = $this->commands[$this->forwardCommand] ?? null) ||
+                    ($forwardCommand = $this->baseCommands[$this->forwardCommand] ?? null)) {
+                    if ($forwardCommand['command'] instanceof Closure) {
+                        $result = $forwardCommand['command']();
+                    } else {
+                        $result = $this->commandHandle($forwardCommand);
+                    }
+                }
+            }
+
+            if ($result === false) {
+                return false;
+            }
+
+            if (! empty($this->command) && ($command = $this->commands[$this->command] ?? null) ||
                 ($command = $this->baseCommands[$this->command] ?? null)) {
 
                 if ($command['command'] instanceof Closure) {
-                    $command['command']();
+                    return $command['command']();
                 } else {
-                    $this->commandHandle($command);
+                    return $this->commandHandle($command);
                 }
 
-            } else {
+            } elseif (! empty($this->command)) {
                 throw new CommandNotFoundException(sprintf('Command "%s" Notfound.', $this->command));
             }
+
+            return $result;
         }
     }
 
@@ -426,21 +458,23 @@ final class Command
 
         }
 
-        if (! empty($command)) {
+        if (!empty($command)) {
             $this->command = $command;
             unset($args[$key]);
             $this->args = $args;
         } else {
-            $this->command = 'help';
+            $this->forwardCommand = 'help';
         }
     }
 
     /**
-     * 处理命令
+     * 命令执行方法
      *
      * @param $commandHandleArray
      *
-     * @throws Throwable
+     * @return bool
+     *
+     * @throws CommandNameParseException
      */
     private function commandHandle($commandHandleArray)
     {
@@ -449,45 +483,35 @@ final class Command
          */
         $command = $commandHandleArray['command'];
         $options = $commandHandleArray['options'];
-        $exceptionHandle = $this->getCommandProperty($command, 'exceptionHandle');
+        $result = true;
 
-        try {
-
-            foreach ($options as $option) {
-                if (is_string($option)) {
-                    $callback = $option . 'Action';
+        foreach ($options as $option) {
+            if (is_string($option)) {
+                $callback = $option . 'Action';
+                if (method_exists($command, $callback)
+                    && self::hasOpt($option)) {
+                    $result = $command->$callback();
+                }
+            } elseif (is_array($option)) {
+                foreach ($option as $alias) {
+                    $callback = $alias . 'Action';
                     if (method_exists($command, $callback)
-                        && self::hasOpt($option)) {
-                        $command->$callback();
-                    }
-                } elseif (is_array($option)) {
-                    foreach ($option as $alias) {
-                        $callback = $alias . 'Action';
-                        if (method_exists($command, $callback)
-                            && self::hasOneOpt($option)) {
-                            $command->$callback();
-                            break 1;
-                        }
+                        && self::hasOneOpt($option)) {
+                        $result = $command->$callback();
+                        break 1;
                     }
                 }
             }
 
-            $command->handle();
-
-        } catch (Throwable $e) {
-            if (is_string($exceptionHandle) && class_exists($exceptionHandle)) {
-                /**
-                 * @var $handle ExceptionHandle
-                 */
-                $handle = new $exceptionHandle;
-                $result = $handle->handle($e);
-
-                if ($result instanceof Throwable) {
-                    throw $result;
-                }
-            } else {
-                throw $e;
+            if ($result === false) {
+                return false;
             }
+        }
+
+        if ($result !== false) {
+            return $command->handle();
+        } else {
+            return false;
         }
     }
 
