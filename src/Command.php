@@ -256,6 +256,22 @@ final class Command
             ->getArrayOpts($key, $default);
     }
 
+
+    public static function getParam($key= null, $default = null)
+    {
+        if (is_numeric($key) || is_string($key)) {
+            return null;
+        }
+
+        if ($key === null) {
+            return self::getCommand()
+                ->args;
+        } else {
+            return self::getCommand()
+                    ->args[$key] ?? $default;
+        }
+    }
+
     /**
      * 获取当前目录
      *
@@ -390,11 +406,29 @@ final class Command
      */
     private function parseCommand()
     {
-        $input = $this->input;
-        $args = $input->getArgs();
+        $args = $this->input()
+            ->getArgs();
+        $key = null;
 
-        if (!empty($args)) {
-            $this->command = array_shift($args);
+        reset($args);
+
+        while (1) {
+            $key = key($args);
+            if ($key === null) break;
+
+            if (is_int($key)) {
+                $command = current($args);
+                break;
+            } else {
+                next($args);
+                continue;
+            }
+
+        }
+
+        if (! empty($command)) {
+            $this->command = $command;
+            unset($args[$key]);
             $this->args = $args;
         } else {
             $this->command = 'help';

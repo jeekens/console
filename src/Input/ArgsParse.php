@@ -23,22 +23,28 @@ class ArgsParse
     public static function flag(array $args)
     {
         $params = $shortOpts = $longOpts = $arrayOpts = [];
+        $isArg = true;
+        $nowOpt = '';
 
         while (false !== ($p = current($args))) {
             next($args);
 
             // 判断是否为一个选项
             if ($p{0} === '-') {
+                $isArg = false;
                 $value = true;
                 $option = substr($p, 1); // 移除开头的-符号
                 $isLong = false;
+                $nowOpt = $option;
                 // 判断是否为一个长选项 --opts
                 if (strpos($option, '-') === 0) {
                     $option = substr($option, 1); // 再次移除开头的-符号
                     $isLong = true;
+                    $nowOpt = $option;
                     // 判断是否存在等号--opts=value
                     if (strpos($option, '=') !== false) {
                         [$option, $value] = explode('=', $option, 2);
+                        $nowOpt = $option;
                     }
 
                 } elseif (isset($option{1}) && $option{1} === '=') { // 判断当前是否为等号开头，如果是则表示为-o=value形式
@@ -46,6 +52,7 @@ class ArgsParse
                 } elseif (strlen($option) > 1) { // 判断当前opt是否长度已经大于1，如果是则表示用户忘记输入=或空格
                    $tmp = $option;
                    $option = $tmp{0};
+                   $nowOpt = $option;
                    $value = substr($tmp, 1);
                 }
 
@@ -61,18 +68,19 @@ class ArgsParse
 
                 } elseif (!$isLong && $value === true) { // 如果是非长选项则表示为批量短选项赋值true
                     foreach (str_split($option) as $char) {
-                        $shortOpts[$char] = true;
+                        self::arrayStrOrArrVal($shortOpts, $char, true);
+                        $nowOpt = $char;
                         $arrayOpts[$char][] = true;
                     }
                     continue;
                 }
 
-                $value   = self::valueFilter($value);
+                $value = self::valueFilter($value);
 
                 if ($isLong) {
-                    $longOpts[$option] = $value;
+                    self::arrayStrOrArrVal($longOpts, $option, $value);
                 } else {
-                    $shortOpts[$option] = $value;
+                    self::arrayStrOrArrVal($shortOpts, $option, $value);
                 }
 
                 $arrayOpts[$option][] = $value;
@@ -84,7 +92,16 @@ class ArgsParse
                 [$name, $value] = explode('=', $p, 2);
                 $params[$name] = self::valueFilter($value);
             } else {
-                $params[] = $p;
+                if ($isArg) {
+                    $params[] = $p;
+                } else {
+                    if (strlen($nowOpt) > 1) {
+                        self::arrayStrOrArrVal($longOpts, $nowOpt, $p);
+                    } else {
+                        self::arrayStrOrArrVal($shortOpts, $nowOpt, $p);
+                    }
+                    $arrayOpts[$nowOpt][] = $p;
+                }
             }
         }
 
@@ -113,6 +130,21 @@ class ArgsParse
         }
 
         return $val;
+    }
+
+
+    protected static function arrayStrOrArrVal(&$array, $key, $val)
+    {
+        if (isset($array[$key]) && is_array($array[$key])) {
+            $array[$key][] = $val;
+        } elseif (isset($array[$key])) {
+            $array[$key] = [
+                $array[$key],
+                $val
+            ];
+        } else {
+            $array[$key] = $val;
+        }
     }
 
 }

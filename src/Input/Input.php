@@ -106,6 +106,10 @@ class Input
             return $this->shortOpts;
         }
 
+        if (is_numeric($key) || is_string($key)) {
+            return null;
+        }
+
         return $this->shortOpts[$key] ?? $default;
     }
 
@@ -129,6 +133,10 @@ class Input
             return $this->longOpts;
         }
 
+        if (is_numeric($key) || is_string($key)) {
+            return null;
+        }
+
         return $this->longOpts[$key] ?? $default;
     }
 
@@ -144,6 +152,10 @@ class Input
             return $this->arrayOpts;
         }
 
+        if (is_numeric($key) || is_string($key)) {
+            return null;
+        }
+
         return $this->arrayOpts[$key] ?? $default;
     }
 
@@ -154,6 +166,10 @@ class Input
      */
     public function hasShortOpts($key)
     {
+        if (is_numeric($key) || is_string($key)) {
+            return null;
+        }
+
         return isset($this->shortOpts[$key]);
     }
 
@@ -164,6 +180,10 @@ class Input
      */
     public function hasLongOpts($key)
     {
+        if (is_numeric($key) || is_string($key)) {
+            return null;
+        }
+
         return isset($this->longOpts[$key]);
     }
 
@@ -174,6 +194,10 @@ class Input
      */
     public function hasArrayOpts($key)
     {
+        if (is_numeric($key) || is_string($key)) {
+            return null;
+        }
+
         return isset($this->arrayOpts[$key]);
     }
 
