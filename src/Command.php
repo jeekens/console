@@ -100,7 +100,6 @@ final class Command
      *
      * @return Command
      *
-     * @throws CommandNameParseException
      * @throws Exception\Exception
      * @throws Exception\UnknownColorException
      */
@@ -125,7 +124,6 @@ final class Command
      *
      * @return Command
      *
-     * @throws CommandNameParseException
      * @throws Exception\Exception
      * @throws Exception\UnknownColorException
      */
@@ -139,7 +137,6 @@ final class Command
      *
      * @return string|null
      *
-     * @throws CommandNameParseException
      * @throws Exception\Exception
      * @throws Exception\UnknownColorException
      */
@@ -153,7 +150,6 @@ final class Command
      *
      * @return array
      *
-     * @throws CommandNameParseException
      * @throws Exception\Exception
      * @throws Exception\UnknownColorException
      */
@@ -167,7 +163,6 @@ final class Command
      *
      * @return array
      *
-     * @throws CommandNameParseException
      * @throws Exception\Exception
      * @throws Exception\UnknownColorException
      */
@@ -181,7 +176,6 @@ final class Command
      *
      * @return string|null
      *
-     * @throws CommandNameParseException
      * @throws Exception\Exception
      * @throws Exception\UnknownColorException
      */
@@ -200,7 +194,6 @@ final class Command
      *
      * @return array|mixed|null
      *
-     * @throws CommandNameParseException
      * @throws Exception\Exception
      * @throws Exception\UnknownColorException
      */
@@ -219,7 +212,6 @@ final class Command
      *
      * @return array|mixed|null
      *
-     * @throws CommandNameParseException
      * @throws Exception\Exception
      * @throws Exception\UnknownColorException
      */
@@ -237,7 +229,6 @@ final class Command
      *
      * @return bool
      *
-     * @throws CommandNameParseException
      * @throws Exception\Exception
      * @throws Exception\UnknownColorException
      */
@@ -255,7 +246,6 @@ final class Command
      *
      * @return bool
      *
-     * @throws CommandNameParseException
      * @throws Exception\Exception
      * @throws Exception\UnknownColorException
      */
@@ -274,7 +264,6 @@ final class Command
      *
      * @return array|mixed|null
      *
-     * @throws CommandNameParseException
      * @throws Exception\Exception
      * @throws Exception\UnknownColorException
      */
@@ -293,7 +282,6 @@ final class Command
      *
      * @return array|mixed|null
      *
-     * @throws CommandNameParseException
      * @throws Exception\Exception
      * @throws Exception\UnknownColorException
      */
@@ -317,7 +305,6 @@ final class Command
      *
      * @return string|null
      *
-     * @throws CommandNameParseException
      * @throws Exception\Exception
      * @throws Exception\UnknownColorException
      */
@@ -333,7 +320,6 @@ final class Command
      *
      * @param $command
      *
-     * @throws CommandNameParseException
      * @throws Exception\Exception
      * @throws Exception\UnknownColorException
      */
@@ -365,7 +351,6 @@ final class Command
      * @param array|null $options
      * @param string|null $example
      *
-     * @throws CommandNameParseException
      * @throws Exception\Exception
      * @throws Exception\UnknownColorException
      */
@@ -395,7 +380,6 @@ final class Command
     /**
      * 启动命令行工具
      *
-     * @throws CommandNotFoundException
      * @throws Throwable
      */
     public static function boot()
@@ -414,7 +398,6 @@ final class Command
      *
      * @return int
      *
-     * @throws CommandNameParseException
      * @throws Exception\Exception
      * @throws Exception\UnknownColorException
      */
@@ -432,7 +415,6 @@ final class Command
      *
      * @return int
      *
-     * @throws CommandNameParseException
      * @throws Exception\Exception
      * @throws Exception\UnknownColorException
      */
@@ -453,7 +435,6 @@ final class Command
      *
      * @return int
      *
-     * @throws CommandNameParseException
      * @throws Exception\Exception
      * @throws Exception\UnknownColorException
      */
@@ -474,7 +455,6 @@ final class Command
      *
      * @return int
      *
-     * @throws CommandNameParseException
      * @throws Exception\Exception
      * @throws Exception\UnknownColorException
      */
@@ -485,9 +465,10 @@ final class Command
     }
 
     /**
-     * @throws CommandNotFoundException
+     * @return bool
      *
-     * @throws Throwable
+     * @throws Exception\Exception
+     * @throws Exception\UnknownColorException
      */
     public function bootstrap()
     {
@@ -589,7 +570,6 @@ final class Command
      *
      * @return bool
      *
-     * @throws CommandNameParseException
      * @throws Exception\Exception
      * @throws Exception\UnknownColorException
      */
@@ -649,7 +629,6 @@ final class Command
      * @param Input|null $input
      * @param Output|null $output
      *
-     * @throws CommandNameParseException
      * @throws Exception\Exception
      * @throws Exception\UnknownColorException
      */
@@ -681,7 +660,7 @@ final class Command
                     $this->addCommand($command, true);
                 }
             }
-        } catch (InputCommandFormatException|CommandNameParseException $e) {
+        } catch (InputCommandFormatException $e) {
             echo \modifier($e->getMessage(), Modifier::COLOR_RED);die(1);
         }
 
@@ -704,7 +683,6 @@ final class Command
      * @param $options
      * @param $example
      *
-     * @throws CommandNameParseException
      * @throws Exception\Exception
      * @throws Exception\UnknownColorException
      */
@@ -740,7 +718,6 @@ final class Command
      * @param CommandInterface $command
      * @param bool $isGlobal
      *
-     * @throws CommandNameParseException
      * @throws Exception\Exception
      * @throws Exception\UnknownColorException
      */
@@ -807,7 +784,6 @@ final class Command
      *
      * @return array
      *
-     * @throws CommandNameParseException
      * @throws Exception\Exception
      * @throws Exception\UnknownColorException
      */
