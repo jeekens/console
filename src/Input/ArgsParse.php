@@ -19,7 +19,7 @@ class ArgsParse
 
     /**
      * @param array $args
-     * 
+     *
      * @return array
      *
      * @throws InputCommandFormatException

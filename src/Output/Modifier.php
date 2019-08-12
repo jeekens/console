@@ -6,6 +6,7 @@ namespace Jeekens\Console\Output;
 
 use Jeekens\Console\Exception\Exception;
 use Jeekens\Console\Exception\UnknownColorException;
+use Jeekens\Console\Exception\UnknownSettingException;
 
 /**
  * Class Modifier
@@ -212,7 +213,7 @@ class Modifier
             }
 
             if (!isset(self::$setting[$setting])) {
-                throw new UnknownColorException(
+                throw new UnknownSettingException(
                     sprintf(
                         'Unsupported setting "%s". [%s]',
                         $setting,

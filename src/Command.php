@@ -5,6 +5,8 @@ namespace Jeekens\Console;
 
 
 use Closure;
+use Jeekens\Console\Exception\InputCommandFormatException;
+use Jeekens\Console\Output\Modifier;
 use Throwable;
 use Jeekens\Console\Input\Input;
 use Jeekens\Console\Output\Output;
@@ -99,6 +101,8 @@ final class Command
      * @return Command
      *
      * @throws CommandNameParseException
+     * @throws Exception\Exception
+     * @throws Exception\UnknownColorException
      */
     public static function createCommand($globalCommand = null, ?Input $input = null, ?Output $output = null)
     {
@@ -122,6 +126,8 @@ final class Command
      * @return Command
      *
      * @throws CommandNameParseException
+     * @throws Exception\Exception
+     * @throws Exception\UnknownColorException
      */
     public static function getCommand()
     {
@@ -134,6 +140,8 @@ final class Command
      * @return string|null
      *
      * @throws CommandNameParseException
+     * @throws Exception\Exception
+     * @throws Exception\UnknownColorException
      */
     public static function getCommandName(): ?string
     {
@@ -146,6 +154,8 @@ final class Command
      * @return array
      *
      * @throws CommandNameParseException
+     * @throws Exception\Exception
+     * @throws Exception\UnknownColorException
      */
     public static function getCommandInfos()
     {
@@ -158,6 +168,8 @@ final class Command
      * @return array
      *
      * @throws CommandNameParseException
+     * @throws Exception\Exception
+     * @throws Exception\UnknownColorException
      */
     public static function getCommandNames()
     {
@@ -170,6 +182,8 @@ final class Command
      * @return string|null
      *
      * @throws CommandNameParseException
+     * @throws Exception\Exception
+     * @throws Exception\UnknownColorException
      */
     public static function getScript()
     {
@@ -187,6 +201,8 @@ final class Command
      * @return array|mixed|null
      *
      * @throws CommandNameParseException
+     * @throws Exception\Exception
+     * @throws Exception\UnknownColorException
      */
     public static function getShortOpts($key = null, $default = null)
     {
@@ -204,6 +220,8 @@ final class Command
      * @return array|mixed|null
      *
      * @throws CommandNameParseException
+     * @throws Exception\Exception
+     * @throws Exception\UnknownColorException
      */
     public static function getLongOpts($key = null, $default = null)
     {
@@ -220,6 +238,8 @@ final class Command
      * @return bool
      *
      * @throws CommandNameParseException
+     * @throws Exception\Exception
+     * @throws Exception\UnknownColorException
      */
     public static function hasOpt(string $key)
     {
@@ -236,6 +256,8 @@ final class Command
      * @return bool
      *
      * @throws CommandNameParseException
+     * @throws Exception\Exception
+     * @throws Exception\UnknownColorException
      */
     public static function hasOneOpt(array $keys)
     {
@@ -253,6 +275,8 @@ final class Command
      * @return array|mixed|null
      *
      * @throws CommandNameParseException
+     * @throws Exception\Exception
+     * @throws Exception\UnknownColorException
      */
     public static function getArrayOpts($key = null, $default = null)
     {
@@ -270,6 +294,8 @@ final class Command
      * @return array|mixed|null
      *
      * @throws CommandNameParseException
+     * @throws Exception\Exception
+     * @throws Exception\UnknownColorException
      */
     public static function getParam($key = null, $default = null)
     {
@@ -291,7 +317,9 @@ final class Command
      *
      * @return string|null
      *
-     * @throws CommandNameParseException.
+     * @throws CommandNameParseException
+     * @throws Exception\Exception
+     * @throws Exception\UnknownColorException
      */
     public static function getPwd()
     {
@@ -306,6 +334,8 @@ final class Command
      * @param $command
      *
      * @throws CommandNameParseException
+     * @throws Exception\Exception
+     * @throws Exception\UnknownColorException
      */
     public static function registerCommand($command)
     {
@@ -336,6 +366,8 @@ final class Command
      * @param string|null $example
      *
      * @throws CommandNameParseException
+     * @throws Exception\Exception
+     * @throws Exception\UnknownColorException
      */
     public static function registerClosureCommand(
         $name,
@@ -369,6 +401,87 @@ final class Command
     public static function boot()
     {
         return self::getCommand()->bootstrap();
+    }
+
+    /**
+     * 向控制台输出一段绿色的文字
+     *
+     * @param string $info
+     * @param string|null $bg
+     * @param array|null $style
+     * @param bool $nl
+     * @param bool $quit
+     *
+     * @return int
+     *
+     * @throws CommandNameParseException
+     * @throws Exception\Exception
+     * @throws Exception\UnknownColorException
+     */
+    public static function info(string $info, string $bg = null, ?array $style = null, bool $nl = true, bool $quit = false)
+    {
+        return self::styleLine($info, Modifier::COLOR_GREEN, $bg, $style, $nl, $quit);
+    }
+
+    /**
+     * 输出一个无格式的文本
+     *
+     * @param string $info
+     * @param bool $nl
+     * @param bool $quit
+     *
+     * @return int
+     *
+     * @throws CommandNameParseException
+     * @throws Exception\Exception
+     * @throws Exception\UnknownColorException
+     */
+    public static function line(string $info, $nl = true, bool $quit = false)
+    {
+        return self::getCommand()->output()
+            ->write($info, $nl, $quit);
+    }
+
+    /**
+     * 向控制台输出一段红色的文字
+     *
+     * @param string $info
+     * @param string|null $bg
+     * @param array|null $style
+     * @param bool $nl
+     * @param bool $quit
+     *
+     * @return int
+     *
+     * @throws CommandNameParseException
+     * @throws Exception\Exception
+     * @throws Exception\UnknownColorException
+     */
+    public static function error(string $info, string $bg = null, ?array $style = null, bool $nl = true, bool $quit = false)
+    {
+        return self::styleLine($info, Modifier::COLOR_RED, $bg, $style, $nl, $quit);
+    }
+
+    /**
+     * 输出一段带有样式的文字
+     *
+     * @param string $info
+     * @param string|null $fg
+     * @param string|null $bg
+     * @param array|null $style
+     * @param bool $nl
+     * @param bool $quit
+     *
+     * @return int
+     *
+     * @throws CommandNameParseException
+     * @throws Exception\Exception
+     * @throws Exception\UnknownColorException
+     */
+    public static function styleLine(string $info, string $fg = null, string $bg = null, ?array $style = null, bool $nl = true, bool $quit = false)
+    {
+        return self::getCommand()->output()
+            ->write(modifier($info, $fg, $bg, $style), $nl, $quit);
     }
 
     /**
@@ -408,7 +521,9 @@ final class Command
                 }
 
             } elseif (! empty($this->command)) {
-                throw new CommandNotFoundException(sprintf('Command "%s" Notfound.', $this->command));
+                self::error(
+                    sprintf('Command %s Notfound.', \modifier($this->command, Modifier::COLOR_RED, Modifier::COLOR_WHITE))
+                    , null, null, true, true);
             }
 
             return $result;
@@ -475,6 +590,8 @@ final class Command
      * @return bool
      *
      * @throws CommandNameParseException
+     * @throws Exception\Exception
+     * @throws Exception\UnknownColorException
      */
     private function commandHandle($commandHandleArray)
     {
@@ -533,6 +650,8 @@ final class Command
      * @param Output|null $output
      *
      * @throws CommandNameParseException
+     * @throws Exception\Exception
+     * @throws Exception\UnknownColorException
      */
     private function __construct($globalCommand = null, ?Input $input = null, ?Output $output = null)
     {
@@ -540,26 +659,30 @@ final class Command
             exit(0);
         }
 
-        if ($input === null) {
-            $input = new Input();
-        }
-
-        if (empty($output)) {
-            $output = new Output();
-        }
-
-        if ($globalCommand) {
-            $commands = [];
-
-            if (!is_array($globalCommand)) {
-                $commands[] = $globalCommand;
-            } else {
-                $commands = $globalCommand;
+        try {
+            if ($input === null) {
+                $input = new Input();
             }
 
-            foreach ($commands as $command) {
-                $this->addCommand($command, true);
+            if (empty($output)) {
+                $output = new Output();
             }
+
+            if ($globalCommand) {
+                $commands = [];
+
+                if (!is_array($globalCommand)) {
+                    $commands[] = $globalCommand;
+                } else {
+                    $commands = $globalCommand;
+                }
+
+                foreach ($commands as $command) {
+                    $this->addCommand($command, true);
+                }
+            }
+        } catch (InputCommandFormatException|CommandNameParseException $e) {
+            echo \modifier($e->getMessage(), Modifier::COLOR_RED);die(1);
         }
 
         $this->input = $input;
@@ -575,13 +698,15 @@ final class Command
      *
      * @param $name
      * @param $closure
-     * @param string|null $describe
-     * @param string|null $usage
-     * @param array|null $arguments
-     * @param array|null $options
-     * @param string|null $example
+     * @param $describe
+     * @param $usage
+     * @param $arguments
+     * @param $options
+     * @param $example
      *
      * @throws CommandNameParseException
+     * @throws Exception\Exception
+     * @throws Exception\UnknownColorException
      */
     private function addClosureCommand(
         $name,
@@ -612,12 +737,12 @@ final class Command
     }
 
     /**
-     * 添加一个常规命令
-     *
      * @param CommandInterface $command
-     * @param $isGlobal
+     * @param bool $isGlobal
      *
      * @throws CommandNameParseException
+     * @throws Exception\Exception
+     * @throws Exception\UnknownColorException
      */
     private function addCommand(CommandInterface $command, bool $isGlobal = false)
     {
@@ -626,7 +751,9 @@ final class Command
         );
 
         if (empty($commandName)) {
-            throw new CommandNameParseException(sprintf('Command class "%s" name is empty or does not exist.', get_class($command)));
+            self::error(
+                sprintf('Command class "%s" name is empty or does not exist.', \modifier(get_class($command), Modifier::COLOR_RED, Modifier::COLOR_WHITE))
+            , null, null, true, true);
         }
 
         if (isset($this->commands[$commandName])) {
@@ -681,13 +808,17 @@ final class Command
      * @return array
      *
      * @throws CommandNameParseException
+     * @throws Exception\Exception
+     * @throws Exception\UnknownColorException
      */
     private function commandNameParse(string $name): array
     {
         $info = explode(':', $name, 2);
 
         if (empty($info) || empty($info[1])) {
-            throw new CommandNameParseException(sprintf('Command name "%s" is unsupported. Must be "groupName:commandName".', $name));
+            self::error(
+                sprintf('Command name "%s" is unsupported. Must be "groupName:commandName".', \modifier($name, Modifier::COLOR_RED, Modifier::COLOR_WHITE))
+                , null, null, true, true);
         }
 
         return $info;

@@ -56,6 +56,8 @@ class Input
      *
      * @param array|null $args
      * @param bool $parsing
+     *
+     * @throws \Jeekens\Console\Exception\InputCommandFormatException
      */
     public function __construct(array $args = null, bool $parsing = true)
     {
