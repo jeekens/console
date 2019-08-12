@@ -5,14 +5,12 @@ namespace Jeekens\Console;
 
 
 use Closure;
-use Jeekens\Console\Exception\InputCommandFormatException;
-use Jeekens\Console\Output\Modifier;
 use Throwable;
 use Jeekens\Console\Input\Input;
 use Jeekens\Console\Output\Output;
+use Jeekens\Console\Output\Modifier;
 use Jeekens\Console\Command\HelpCommand;
-use Jeekens\Console\Exception\CommandNotFoundException;
-use Jeekens\Console\Exception\CommandNameParseException;
+use Jeekens\Console\Exception\InputCommandFormatException;
 
 /**
  * Class Command
