@@ -6,6 +6,7 @@ namespace Jeekens\Console;
 
 use Closure;
 use Throwable;
+use Jeekens\Basics\Os;
 use Jeekens\Console\Input\Input;
 use Jeekens\Console\Output\Output;
 use Jeekens\Console\Output\Modifier;
@@ -668,10 +669,10 @@ final class Command
         }
 
         // linux, unix, git-bash
-        if (scripted()) {
+        if (Os::getShell()) {
             // COMMAND: sh -c 'read -p "Enter Password:" -s user_input && echo $user_input'
             $command  = sprintf('sh -c "read -p \'%s\' -s user_input && echo $user_input"', $prompt);
-            $password = script($command, false);
+            $password = Os::script($command, false);
 
             print "\n";
             return $password;
