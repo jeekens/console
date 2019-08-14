@@ -6,6 +6,7 @@ namespace Jeekens\Console;
 
 use Closure;
 use Throwable;
+use Jeekens\Basics\Fs;
 use Jeekens\Basics\Os;
 use Jeekens\Console\Input\Input;
 use Jeekens\Console\Output\Output;
@@ -586,7 +587,7 @@ final class Command
 
         foreach ($choices as $value) {
             self::line(
-                \modifier("({$i}). ", Modifier::COLOR_GREEN).$value
+                \modifier("({$i}). ", Modifier::COLOR_GREEN) . $value
             );
             $i++;
         }
@@ -642,40 +643,61 @@ final class Command
         return $value;
     }
 
-
-
     /**
-     * @see https://stackoverflow.com/questions/187736/command-line-password-prompt-in-php
+     * 隐藏用户输入内容
      *
-     * @param $prompt
+     * @param string $question
      *
      * @return array|string
+     *
+     * @throws Exception\Exception
+     * @throws Exception\UnknownColorException
      */
-    private static function hideInput($prompt)
+    public static function askHide(string $question)
     {
-        $prompt = $prompt ? addslashes($prompt) : 'Enter:';
+        self::line($question);
+        return self::hideInput();
+    }
 
+    /**
+     * 隐藏用户输入内容
+     *
+     * @return array|string
+     *
+     * @throws Exception\Exception
+     * @throws Exception\UnknownColorException
+     */
+    private static function hideInput()
+    {
         // at windows cmd.
-        if (preg_match('/^win/i', PHP_OS)) {
-            $vbFile = sys_get_temp_dir() . '/hidden_prompt_input.vbs';
+        if (Os::isWin()) {
+            $exe = __DIR__ . './Resources/hiddeninput.exe';
+            $tmpExe = Fs::getTmpDir() . '/hiddeninput.exe';
 
-            file_put_contents($vbFile, sprintf('wscript.echo(InputBox("%s", "", "password here"))', $prompt));
+            copy($exe, $tmpExe);
 
-            $command  = 'cscript //nologo ' . escapeshellarg($vbFile);
-            $password = rtrim(shell_exec($command));
-            unlink($vbFile);
+            $exe = $tmpExe;
 
-            return $password;
+            $output = trim(Os::script($exe, false));
+            // clean up
+            if (isset($tmpExe)) {
+                unlink($tmpExe);
+            }
+
+            self::line('');
+
+            return $output;
         }
 
         // linux, unix, git-bash
-        if (Os::getShell()) {
-            // COMMAND: sh -c 'read -p "Enter Password:" -s user_input && echo $user_input'
-            $command  = sprintf('sh -c "read -p \'%s\' -s user_input && echo $user_input"', $prompt);
-            $password = Os::script($command, false);
-
-            print "\n";
-            return $password;
+        if (($shell = Os::getShell())) {
+            $readCmd = ($shell === 'csh') ? 'set mypassword = $<' : 'read -r mypassword';
+            $command = sprintf("/usr/bin/env %s -c 'stty -echo; %s; stty echo; echo \$mypassword'", $shell, $readCmd);
+            $output = OS::script($command, false);
+            if ($output !== null) {
+                self::line('');
+                return trim($output);
+            }
         }
 
         throw new \RuntimeException('Can not invoke bash shell env');
@@ -710,6 +732,7 @@ final class Command
             $this->isBoot = true;
             $result = true;
             $this->parseCommand();
+            $currentCommand = $this->command;
 
             if (!empty($this->forwardCommand)) {
                 if (($forwardCommand = $this->commands[$this->forwardCommand] ?? null) ||
@@ -726,8 +749,8 @@ final class Command
                 return false;
             }
 
-            if (!empty($this->command) && ($command = $this->commands[$this->command] ?? null) ||
-                ($command = $this->baseCommands[$this->command] ?? null)) {
+            if (!empty($currentCommand) && ($command = $this->commands[$currentCommand] ?? null) ||
+                ($command = $this->baseCommands[$currentCommand] ?? null)) {
 
                 if ($command['command'] instanceof Closure) {
                     return $command['command']();
@@ -735,33 +758,15 @@ final class Command
                     return $this->commandHandle($command);
                 }
 
-            } elseif (!empty($this->command)) {
+            } elseif (!empty($currentCommand)) {
                 self::error(
-                    sprintf('Command %s Notfound.', \modifier($this->command, Modifier::COLOR_RED, Modifier::COLOR_WHITE)),
+                    sprintf('Command %s Notfound.', \modifier($currentCommand, Modifier::COLOR_RED, Modifier::COLOR_WHITE)),
                     1
                 );
             }
 
             return $result;
         }
-    }
-
-    /**
-     * 获取命令属性
-     *
-     * @param $command
-     * @param string $name
-     *
-     * @return mixed
-     */
-    private function getCommandProperty($command, string $name)
-    {
-        if (property_exists($command, $name)) {
-            return $command->$name;
-        } elseif (method_exists($command, $name)) {
-            return $command->$name();
-        }
-        return null;
     }
 
     /**
@@ -960,7 +965,7 @@ final class Command
     private function addCommand(CommandInterface $command, bool $isGlobal = false)
     {
         $commandName = $this->commandNameFilter(
-            $this->getCommandProperty($command, 'name')
+            class_get($command, 'name')
         );
 
         if (empty($commandName)) {
@@ -994,7 +999,7 @@ final class Command
      */
     private function commandOptionsParse($command): array
     {
-        $options = $this->getCommandProperty($command, 'options');
+        $options = class_get($command, 'options');
         $canCallback = [];
 
         if (is_array($options)) {
