@@ -44,11 +44,6 @@ class Output
      */
     protected $buffer = '';
 
-    /**
-     * @var Tags
-     */
-    protected $tags;
-
 
     /**
      * Output constructor.
@@ -65,8 +60,6 @@ class Output
         if (! empty($errorStream)) {
             $this->errorStream = $errorStream;
         }
-
-        $this->tags = new Tags();
     }
 
     /**
@@ -85,7 +78,7 @@ class Output
             $messages = implode($nl ? PHP_EOL : '', $messages);
         }
 
-        $messages = $this->tags->apply($messages);
+        $messages = Style::tags()->apply($messages);
 
         if (! Tags::isEnableAnsi()) {
             $messages = clear_style($messages);

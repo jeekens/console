@@ -78,9 +78,14 @@ class Tags
     protected $tags = [];
 
     /**
-     * @var int
+     * @var string
      */
-    protected $current = 39;
+    protected $regex = '';
+
+    /**
+     * @var string
+     */
+    protected $currentRegex = '';
 
     /**
      * @var bool
@@ -118,9 +123,13 @@ class Tags
         $this->build();
     }
 
-    protected function regex()
+    public function regex()
     {
-        return '(<(?:(?:(?:\\\)*\/)*(?:' . implode('|', array_keys($this->keys)) . '))>)is';
+        if (empty($this->regex)){
+            return ($this->regex = '(<(?:(?:(?:\\\)*\/)*(?:' . implode('|', array_keys($this->keys)) . '))>)is');
+        }
+
+        return $this->regex;
     }
 
     protected function build()
@@ -147,24 +156,36 @@ class Tags
     public function apply(string $str)
     {
         if (self::isEnableAnsi()) {
-            $this->getCurrent($str);
-            return $this->start() . $this->parse($str) . $this->end();
+            $currentCode = $this->getCurrent($str);
+            return $this->start($currentCode) . $this->parse($str, $currentCode) . $this->end();
         } else {
-            return preg_replace($this->regex(), '', $str);
+            return $this->applyNoAnsi($str);
         }
     }
 
     /**
-     * 获取首位的标签
+     * 清除所有标签
      *
      * @param $str
+     *
+     * @return string|null
      */
+    public function applyNoAnsi($str)
+    {
+        return preg_replace($this->regex(), '', $str);
+    }
+
     protected function getCurrent($str)
     {
-        $pattern = sprintf('!^<(%s)>.*</\1>$!is', implode('|', array_keys($this->keys)));
-        if (preg_match_all($pattern, $str, $match)) {
-            $this->current = $this->keys[strtolower($match[1][0])];
+        if (empty($this->currentRegex)) {
+            $this->currentRegex = sprintf('!^<(%s)>.*</\1>$!is', implode('|', array_keys($this->keys)));
         }
+
+        if (preg_match_all($this->currentRegex, $str, $match)) {
+            return $this->keys[strtolower($match[1][0])];
+        }
+
+        return null;
     }
 
     /**
@@ -176,7 +197,7 @@ class Tags
      */
     protected function start($codes = null)
     {
-        $codes = $codes ?: $this->currentCode();
+        $codes = $codes ?: [0];
         $codes = $this->codeStr($codes);
 
         return $this->wrapCodes($codes);
@@ -205,10 +226,11 @@ class Tags
      * 匹配解析全部标签，并替换为ansi代码
      *
      * @param $str
+     * @param $currentCode
      *
      * @return mixed
      */
-    protected function parse($str)
+    protected function parse($str, $currentCode)
     {
         $count = preg_match_all($this->regex(), $str, $matches);
 
@@ -218,7 +240,7 @@ class Tags
 
         $matches = reset($matches);
 
-        return $this->parseTags($str, $matches);
+        return $this->parseTags($str, $matches, $currentCode);
     }
 
     /**
@@ -226,12 +248,13 @@ class Tags
      *
      * @param $str
      * @param $tags
+     * @param $currentCode
      *
      * @return mixed
      */
-    protected function parseTags($str, $tags)
+    protected function parseTags($str, $tags, $currentCode)
     {
-        $history = ($this->currentCode()) ? [$this->currentCode()] : [];
+        $history = $currentCode !== null ? [$currentCode] : [];
 
         foreach ($tags as $tag) {
             $str = $this->replaceTag($str, $tag, $history);
@@ -281,16 +304,6 @@ class Tags
         sort($codes);
 
         return implode(';', $codes);
-    }
-
-    /**
-     * 返回最外层的ansi代码
-     *
-     * @return array|string
-     */
-    protected function currentCode()
-    {
-        return $this->codeStr($this->current);
     }
 
     /**

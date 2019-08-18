@@ -5,6 +5,7 @@ namespace Jeekens\Console;
 
 
 use Closure;
+use Jeekens\Console\Output\Style;
 use Throwable;
 use Jeekens\Basics\Fs;
 use Jeekens\Basics\Os;
@@ -986,8 +987,7 @@ final class Command
             }
         } catch (InputCommandFormatException $e) {
             if (Tags::isEnableAnsi()) {
-                $tags = new Tags();
-                $error = $tags->apply(sprintf('<red>%s</red>', $e->getMessage()));
+                $error = Style::tags()->apply(sprintf('<red>%s</red>', $e->getMessage()));
             } else {
                 $error = $e->getMessage();
             }
