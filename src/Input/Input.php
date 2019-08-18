@@ -3,6 +3,17 @@
 
 namespace Jeekens\Console\Input;
 
+
+use const STDIN;
+use function trim;
+use function fgets;
+use function getcwd;
+use function implode;
+use function is_string;
+use function is_numeric;
+use function array_shift;
+
+
 /**
  * Class Input
  *
@@ -224,7 +235,7 @@ class Input
      *
      * @return bool|string
      */
-    public function read(int $length = 1024)
+    public function read(int $length = 4096)
     {
         return trim(fgets($this->inputStream, $length));
     }

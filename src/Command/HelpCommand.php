@@ -5,9 +5,8 @@ namespace Jeekens\Console\Command;
 
 
 use Jeekens\Console\Command;
-use Jeekens\Console\Output\Table;
-use Jeekens\Console\Output\Modifier;
 use Jeekens\Console\CommandInterface;
+use function sprintf;
 
 class HelpCommand implements CommandInterface
 {

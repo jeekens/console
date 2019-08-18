@@ -3,6 +3,14 @@
 
 namespace Jeekens\Console\Output;
 
+
+use const STDOUT;
+use const STDERR;
+use function fwrite;
+use function strlen;
+use function implode;
+use function is_array;
+
 /**
  * Class Output
  *

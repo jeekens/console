@@ -5,6 +5,20 @@ namespace Jeekens\Console\Input;
 
 use Jeekens\Console\Exception\InputCommandFormatException;
 
+
+use function next;
+use function substr;
+use function strpos;
+use function strlen;
+use function current;
+use function explode;
+use function is_bool;
+use function is_array;
+use function str_split;
+use function is_numeric;
+use function strtolower;
+use function array_search;
+
 /**
  * Class ArgsParse
  *
@@ -142,7 +156,6 @@ class ArgsParse
 
         return $val;
     }
-
 
     protected static function arrayStrOrArrVal(&$array, $key, $val)
     {

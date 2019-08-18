@@ -5,14 +5,43 @@ namespace Jeekens\Console;
 
 
 use Closure;
-use Jeekens\Console\Output\Tags;
 use Throwable;
 use Jeekens\Basics\Fs;
 use Jeekens\Basics\Os;
 use Jeekens\Console\Input\Input;
+use Jeekens\Console\Output\Tags;
 use Jeekens\Console\Output\Output;
 use Jeekens\Console\Command\HelpCommand;
 use Jeekens\Console\Exception\InputCommandFormatException;
+use function key;
+use function copy;
+use function exec;
+use function next;
+use function trim;
+use function reset;
+use function ltrim;
+use function getenv;
+use function is_int;
+use function unlink;
+use function strpos;
+use function current;
+use function explode;
+use function implode;
+use function sprintf;
+use function ucfirst;
+use function ob_start;
+use function var_dump;
+use function is_array;
+use function get_class;
+use function is_string;
+use function array_keys;
+use function is_numeric;
+use function preg_match;
+use function strtolower;
+use function ob_end_clean;
+use function preg_replace;
+use function method_exists;
+use function ob_get_contents;
 
 /**
  * Class Command

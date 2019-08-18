@@ -5,6 +5,20 @@ namespace Jeekens\Console\Output;
 
 
 use Jeekens\Basics\Os;
+use function sort;
+use function reset;
+use function strpos;
+use function sprintf;
+use function implode;
+use function is_array;
+use function array_pop;
+use function array_keys;
+use function strtolower;
+use function str_replace;
+use function preg_replace;
+use function array_unshift;
+use function preg_match_all;
+use function array_key_exists;
 
 /**
  * Class Tags
@@ -112,8 +126,8 @@ class Tags
     protected function build()
     {
         foreach ($this->keys as $tag => $code) {
-            $this->tags["<{$tag}>"]    = $code;
-            $this->tags["</{$tag}>"]   = $code;
+            $this->tags["<{$tag}>"] = $code;
+            $this->tags["</{$tag}>"] = $code;
             $this->tags["<\\/{$tag}>"] = $code;
         }
     }
