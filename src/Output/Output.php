@@ -38,6 +38,11 @@ class Output
      */
     protected $buffer = '';
 
+    /**
+     * @var Tags
+     */
+    protected $tags;
+
 
     /**
      * Output constructor.
@@ -54,6 +59,8 @@ class Output
         if (! empty($errorStream)) {
             $this->errorStream = $errorStream;
         }
+
+        $this->tags = new Tags();
     }
 
     /**
@@ -68,12 +75,10 @@ class Output
      */
     public function write($messages, $nl = true, $quit = false, bool $isErr = false): int
     {
-        $tags = new Tags();
-
         if (! Os::systemHasAnsiSupport(Os::isWin())) {
-            $messages = clear_style($tags->applyNoAscii($messages));
+            $messages = clear_style($this->tags->applyNoAscii($messages));
         } else {
-            $messages = $tags->apply($messages);
+            $messages = $this->tags->apply($messages);
         }
 
         if (is_array($messages)) {
