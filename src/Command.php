@@ -17,6 +17,7 @@ use function key;
 use function copy;
 use function exec;
 use function next;
+use function to_array;
 use function trim;
 use function reset;
 use function ltrim;
@@ -138,13 +139,6 @@ final class Command
     public static function createCommand($globalCommand = null, ?Input $input = null, ?Output $output = null)
     {
         if (!(self::$_singleton instanceof self)) {
-
-            if (empty($globalCommand)) {
-                foreach (self::$defaultGlobalCommands as $command) {
-                    $globalCommand[] = new $command();
-                }
-            }
-
             self::$_singleton = new self($globalCommand, $input, $output);
         }
 
@@ -985,21 +979,19 @@ final class Command
             }
 
             if ($globalCommand) {
-                $commands = [];
-
-                if (!is_array($globalCommand)) {
-                    $commands[] = $globalCommand;
-                } else {
-                    $commands = $globalCommand;
-                }
-
+                $commands = to_array($globalCommand);
                 foreach ($commands as $command) {
                     $this->addCommand($command, true);
                 }
             }
         } catch (InputCommandFormatException $e) {
-            $tags = new Tags();
-            echo $tags->apply(sprintf('<red>%s</red>', $e->getMessage()));
+            if (Tags::isEnableAnsi()) {
+                $tags = new Tags();
+                $error = $tags->apply(sprintf('<red>%s</red>', $e->getMessage()));
+            } else {
+                $error = $e->getMessage();
+            }
+            echo $error;
             die(1);
         }
 
