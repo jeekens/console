@@ -1,9 +1,16 @@
-<?php
+<?php declare(strict_types=1);
 
 
 namespace Jeekens\Console\Output;
 
 
+use Jeekens\Basics\Os;
+
+/**
+ * Class Tags
+ *
+ * @package Jeekens\Console\Output
+ */
 class Tags
 {
 
@@ -61,13 +68,43 @@ class Tags
      */
     protected $current = 39;
 
+    /**
+     * @var bool
+     */
+    protected static $isAnsi = true;
+
+    /**
+     * 开启ansi
+     */
+    public static function enableAnsi()
+    {
+        self::$isAnsi = true;
+    }
+
+    /**
+     * 关闭ansi
+     */
+    public static function disableAnsi()
+    {
+        self::$isAnsi = false;
+    }
+
+    /**
+     * 判断当前是否支持ansi
+     *
+     * @return bool
+     */
+    public static function isEnableAnsi()
+    {
+        return self::$isAnsi && Os::systemHasAnsiSupport(Os::isWin());
+    }
 
     public function __construct()
     {
         $this->build();
     }
 
-    public function regex()
+    protected function regex()
     {
         return '(<(?:(?:(?:\\\)*\/)*(?:' . implode('|', array_keys($this->keys)) . '))>)is';
     }
@@ -87,7 +124,7 @@ class Tags
     }
 
     /**
-     * 返回标签转化为ascii后的字符串
+     * 返回标签转化为ansi后的字符串
      *
      * @param string $str
      *
@@ -95,20 +132,12 @@ class Tags
      */
     public function apply(string $str)
     {
-        $this->getCurrent($str);
-        return $this->start() . $this->parse($str) . $this->end();
-    }
-
-    /**
-     * 删除所有标签
-     *
-     * @param string $str
-     *
-     * @return string|null
-     */
-    public function applyNoAscii(string $str)
-    {
-        return preg_replace($this->regex(), '', $str);
+        if (self::isEnableAnsi()) {
+            $this->getCurrent($str);
+            return $this->start() . $this->parse($str) . $this->end();
+        } else {
+            return preg_replace($this->regex(), '', $str);
+        }
     }
 
     /**
@@ -125,7 +154,7 @@ class Tags
     }
 
     /**
-     * 返回起始的ascii代码
+     * 返回起始的ansi代码
      *
      * @param null $codes
      *
@@ -140,7 +169,7 @@ class Tags
     }
 
     /**
-     * 返回末尾ascii代码
+     * 返回末尾ansi代码
      *
      * @param null $codes
      *
@@ -159,7 +188,7 @@ class Tags
     }
 
     /**
-     * 匹配解析全部标签，并替换为ascii代码
+     * 匹配解析全部标签，并替换为ansi代码
      *
      * @param $str
      *
@@ -198,7 +227,7 @@ class Tags
     }
 
     /**
-     * 替换标签为ascii代码
+     * 替换标签为ansi代码
      *
      * @param $str
      * @param $tag
@@ -222,7 +251,7 @@ class Tags
     }
 
     /**
-     * 拼接ascii代码
+     * 拼接ansi代码
      *
      * @param $codes
      *
@@ -230,7 +259,7 @@ class Tags
      */
     protected function codeStr($codes)
     {
-        if (!is_array($codes) && strpos($codes, ';')) {
+        if (!is_array($codes) && strpos((string)$codes, ';')) {
             return $codes;
         }
 
@@ -241,7 +270,7 @@ class Tags
     }
 
     /**
-     * 返回最外层的ascii代码
+     * 返回最外层的ansi代码
      *
      * @return array|string
      */
@@ -251,7 +280,7 @@ class Tags
     }
 
     /**
-     * 返回标签对应的ascii代码
+     * 返回标签对应的ansi代码
      *
      * @param $key
      *

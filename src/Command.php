@@ -5,12 +5,12 @@ namespace Jeekens\Console;
 
 
 use Closure;
+use Jeekens\Console\Output\Tags;
 use Throwable;
 use Jeekens\Basics\Fs;
 use Jeekens\Basics\Os;
 use Jeekens\Console\Input\Input;
 use Jeekens\Console\Output\Output;
-use Jeekens\Console\Output\Modifier;
 use Jeekens\Console\Command\HelpCommand;
 use Jeekens\Console\Exception\InputCommandFormatException;
 
@@ -492,7 +492,7 @@ final class Command
         }
 
         if ($default !== '') {
-            $msg = ucfirst($question) . \modifier(' (Default: ' . $default . ')', Modifier::COLOR_GREEN);
+            $msg = ucfirst($question) . sprintf(' <green>(Default: %s)</green>', $default);
         } else {
             $msg = ucfirst($question);
         }
@@ -525,7 +525,7 @@ final class Command
         }
 
         $confirm = ['y' => true, 'yes' => true, 'no' => false, 'n' => false,];
-        $message = ucfirst($message) . \modifier(' [yes(y) OR no(n)]', Modifier::COLOR_GREEN);
+        $message = ucfirst($message) . '<green>[yes(y) OR no(n)]</green>';
         $i = 0;
 
         confirm:
@@ -570,7 +570,7 @@ final class Command
 
         foreach ($choices as $value) {
             self::line(
-                \modifier("({$i}). ", Modifier::COLOR_GREEN) . $value
+                sprintf(' <green>(%d).</green> %s', $i, $value)
             );
             $i++;
         }
@@ -826,7 +826,7 @@ final class Command
 
             } elseif (!empty($currentCommand)) {
                 self::error(
-                    sprintf('Command %s Notfound.', \modifier($currentCommand, Modifier::COLOR_RED, Modifier::COLOR_WHITE)),
+                    sprintf('Command <red><background_white>%s</background_white></red> Notfound.', $currentCommand),
                     1
                 );
             }
@@ -969,7 +969,8 @@ final class Command
                 }
             }
         } catch (InputCommandFormatException $e) {
-            echo \modifier($e->getMessage(), Modifier::COLOR_RED);
+            $tags = new Tags();
+            echo $tags->apply(sprintf('<red>%s</red>', $e->getMessage()));
             die(1);
         }
 
@@ -1037,9 +1038,8 @@ final class Command
 
         if (empty($commandName)) {
             self::error(
-                sprintf('Command class "%s" name is empty or does not exist.',
-                    \modifier(get_class($command), Modifier::COLOR_RED, Modifier::COLOR_WHITE
-                    )), 1);
+                sprintf('Command class <red><background_white>"%s"</background_white></red> name is empty or does not exist.',
+                    get_class($command)), 1);
         }
 
         if (isset($this->commands[$commandName])) {
@@ -1102,8 +1102,8 @@ final class Command
 
         if (empty($info) || empty($info[1])) {
             self::error(
-                sprintf('Command name "%s" is unsupported. Must be "groupName:commandName".',
-                    \modifier($name, Modifier::COLOR_RED, Modifier::COLOR_WHITE)),
+                sprintf('Command name <red><background_white>"%s"</background_white></red> is unsupported. Must be "groupName:commandName".',
+                    $name),
                 1
             );
         }

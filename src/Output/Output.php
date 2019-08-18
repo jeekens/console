@@ -3,8 +3,6 @@
 
 namespace Jeekens\Console\Output;
 
-use Jeekens\Basics\Os;
-
 /**
  * Class Output
  *
@@ -75,14 +73,14 @@ class Output
      */
     public function write($messages, $nl = true, $quit = false, bool $isErr = false): int
     {
-        if (! Os::systemHasAnsiSupport(Os::isWin())) {
-            $messages = clear_style($this->tags->applyNoAscii($messages));
-        } else {
-            $messages = $this->tags->apply($messages);
-        }
-
         if (is_array($messages)) {
             $messages = implode($nl ? PHP_EOL : '', $messages);
+        }
+
+        $messages = $this->tags->apply($messages);
+
+        if (! Tags::isEnableAnsi()) {
+            $messages = clear_style($messages);
         }
 
         $messages .= $nl ? PHP_EOL : '';
