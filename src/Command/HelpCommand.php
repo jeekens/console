@@ -36,7 +36,8 @@ class HelpCommand implements CommandInterface
     /**
      * @return string
      *
-     * @throws \Jeekens\Console\Exception\CommandNameParseException
+     * @throws \Jeekens\Console\Exception\Exception
+     * @throws \Jeekens\Console\Exception\UnknownColorException
      */
     public function example()
     {
@@ -46,43 +47,6 @@ class HelpCommand implements CommandInterface
 
     public function handle()
     {
-        $info = Command::getCommandInfos()['help'];
-
-        if (! empty($info['command']->describe)) {
-            echo \modifier('Command Describe: ', Modifier::COLOR_GREEN),PHP_EOL;
-            echo $info['command']->describe,PHP_EOL,PHP_EOL;
-        }
-
-        if (! empty($info['command']->usage)) {
-            echo \modifier('Usage: ', Modifier::COLOR_GREEN),PHP_EOL;
-            echo $info['command']->usage,PHP_EOL,PHP_EOL;
-        }
-
-        if (! empty($info['command']->arguments)) {
-            $table = new Table();
-            echo \modifier('Arguments: ', Modifier::COLOR_GREEN),PHP_EOL;
-            foreach ($info['command']->arguments as $key => $val) {
-                $table
-                    ->addRow([
-                        \modifier('Arguments'.((string)($key+1)), Modifier::COLOR_RED),
-                        $val
-                    ]);
-            }
-            $table->hideBorder()->display();
-        }
-
-        if (! empty($info['command']->options)) {
-            $table = new Table();
-            echo \modifier('Options: ', Modifier::COLOR_GREEN),PHP_EOL;
-            foreach ($info['command']->options as $key => $val) {
-                $table
-                    ->addRow([
-                        \modifier($key, Modifier::COLOR_YELLOW),
-                        $val
-                    ]);
-            }
-            $table->hideBorder()->display();
-        }
 
     }
 

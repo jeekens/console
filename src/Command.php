@@ -22,6 +22,8 @@ use Jeekens\Console\Exception\InputCommandFormatException;
 final class Command
 {
 
+    private static $screenSize;
+
     /**
      * @var string|null
      */
@@ -402,7 +404,7 @@ final class Command
      */
     public static function info(string $info, $quit = false)
     {
-        return self::styleLine($info, Modifier::COLOR_GREEN, null, null, $quit);
+        return self::write(sprintf('<green>%s</green>', $info), true, $quit);
     }
 
     /**
@@ -453,7 +455,7 @@ final class Command
      */
     public static function error(string $info, $quit = false)
     {
-        return self::styleLine($info, Modifier::COLOR_RED, null, null, $quit);
+        return self::write(sprintf('<red>%s</red>', $info), true, $quit);
     }
 
     /**
@@ -469,26 +471,7 @@ final class Command
      */
     public static function warning(string $info, $quit = false)
     {
-        return self::styleLine($info, Modifier::COLOR_YELLOW, null, null, $quit);
-    }
-
-    /**
-     * 输出一段带有样式的文字
-     *
-     * @param string $info
-     * @param string|null $fg
-     * @param string|null $bg
-     * @param array|null $style
-     * @param bool|int $quit
-     *
-     * @return int
-     *
-     * @throws Exception\Exception
-     * @throws Exception\UnknownColorException
-     */
-    public static function styleLine(string $info, string $fg = null, string $bg = null, ?array $style = null, $quit = false)
-    {
-        return self::write(modifier($info, $fg, $bg, $style), true, $quit);
+        return self::write(sprintf('<yellow>%s</yellow>', $info), true, $quit);
     }
 
     /**
@@ -599,6 +582,40 @@ final class Command
         } else {
             return $defaultIndex;
         }
+    }
+
+    /**
+     * 清屏
+     *
+     * @throws Exception\Exception
+     * @throws Exception\UnknownColorException
+     */
+    public static function clear()
+    {
+        self::getCommand()
+            ->output()
+            ->write("\033[H\033[2J", false);
+    }
+
+    /**
+     * @param $data
+     *
+     * @throws Exception\Exception
+     * @throws Exception\UnknownColorException
+     */
+    public static function dump($data)
+    {
+        ob_start();
+
+        var_dump($data);
+
+        $result = ob_get_contents();
+
+        ob_end_clean();
+
+        self::getCommand()
+            ->output()
+            ->write($result);
     }
 
     /**
@@ -721,6 +738,55 @@ final class Command
     }
 
     /**
+     * 返回终端屏幕大小
+     *
+     * @param bool $refresh
+     *
+     * @return array|bool
+     */
+    public static function getScreenSize(bool $refresh = false)
+    {
+        if (self::$screenSize !== null && !$refresh) {
+            return self::$screenSize;
+        }
+
+        if (Os::getShell()) {
+            // try stty if available
+            $stty = [];
+
+            if (exec('stty -a 2>&1', $stty)
+                && preg_match('/rows\s+(\d+);\s*columns\s+(\d+);/mi', implode(' ', $stty), $matches)
+            ) {
+                return (self::$screenSize = [$matches[2], $matches[1]]);
+            }
+
+            // fallback to tput, which may not be updated on terminal resize
+            if (($width = (int)exec('tput cols 2>&1')) > 0 && ($height = (int)exec('tput lines 2>&1')) > 0) {
+                return (self::$screenSize = [$width, $height]);
+            }
+
+            // fallback to ENV variables, which may not be updated on terminal resize
+            if (($width = (int)getenv('COLUMNS')) > 0 && ($height = (int)getenv('LINES')) > 0) {
+                return (self::$screenSize = [$width, $height]);
+            }
+        }
+
+        if (Os::isWin()) {
+            $output = [];
+            exec('mode con', $output);
+
+            if (isset($output[1]) && strpos($output[1], 'CON') !== false) {
+                return (self::$screenSize = [
+                    (int)preg_replace('~\D~', '', $output[3]),
+                    (int)preg_replace('~\D~', '', $output[4])
+                ]);
+            }
+        }
+
+        return (self::$screenSize = false);
+    }
+
+    /**
      * @return bool
      *
      * @throws Exception\Exception
@@ -767,6 +833,8 @@ final class Command
 
             return $result;
         }
+
+        return null;
     }
 
     /**
@@ -964,9 +1032,8 @@ final class Command
      */
     private function addCommand(CommandInterface $command, bool $isGlobal = false)
     {
-        $commandName = $this->commandNameFilter(
-            class_get($command, 'name')
-        );
+        $name = (string)class_get($command, 'name');
+        $commandName = $this->commandNameFilter($name);
 
         if (empty($commandName)) {
             self::error(
