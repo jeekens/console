@@ -1,11 +1,11 @@
-<?php
+<?php declare(strict_types=1);
 
 
 namespace Jeekens\Console\Output;
 
 
-use Jeekens\Basics\Os;
 use InvalidArgumentException;
+use Jeekens\Console\Command;
 
 class Grid
 {
@@ -36,7 +36,7 @@ class Grid
         }
 
         if (empty($maxWidth)) {
-            $this->width = Os::getScreenSize(true)[0];
+            $this->width = Command::getScreenSize(true)[0];
         } else {
             $this->width = $maxWidth;
         }
@@ -61,7 +61,7 @@ class Grid
 
     public function render()
     {
-
+        $this->scanRenderOptions();
     }
 
     protected function scanRenderOptions()

@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 
 namespace Jeekens\Console\Output;
@@ -41,7 +41,7 @@ class Row implements RenderInterface
             $this->addColumn($columns);
         }
 
-        $this->dividerLength = mb_strwidth(clear_style($this->columnDivider), 'UTF-8');
+        $this->dividerLength = mb_strwidth(clear_style(Style::tags()->applyNoAnsi($this->columnDivider)), 'UTF-8');
     }
 
     /**
@@ -54,7 +54,7 @@ class Row implements RenderInterface
     public function setDivider(string $divider)
     {
         $this->columnDivider = $divider;
-        $this->dividerLength = mb_strwidth(clear_style($this->columnDivider), 'UTF-8');
+        $this->dividerLength = mb_strwidth(clear_style(Style::tags()->applyNoAnsi($this->columnDivider)), 'UTF-8');
         return $this;
     }
 
