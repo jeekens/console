@@ -850,7 +850,7 @@ final class Command
 
             } elseif (!empty($currentCommand)) {
                 self::error(
-                    sprintf('Command <red><background_white>%s</background_white></red> Notfound.', $currentCommand),
+                    sprintf('Command <background_white>%s</background_white> Notfound.', $currentCommand),
                     1
                 );
             }
@@ -1059,7 +1059,7 @@ final class Command
 
         if (empty($commandName)) {
             self::error(
-                sprintf('Command class <red><background_white>"%s"</background_white></red> name is empty or does not exist.',
+                sprintf('Command class <background_white>"%s"</background_white> name is empty or does not exist.',
                     get_class($command)), 1);
         }
 
@@ -1123,7 +1123,7 @@ final class Command
 
         if (empty($info) || empty($info[1])) {
             self::error(
-                sprintf('Command name <red><background_white>"%s"</background_white></red> is unsupported. Must be "groupName:commandName".',
+                sprintf('Command name <background_white>"%s"</background_white> is unsupported. Must be "groupName:commandName".',
                     $name),
                 1
             );
