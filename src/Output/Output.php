@@ -80,7 +80,7 @@ class Output
 
         $messages = Style::tags()->apply($messages);
 
-        if (! Tags::isEnableAnsi()) {
+        if (! Style::isEnableAnsi()) {
             $messages = clear_style($messages);
         }
 

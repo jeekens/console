@@ -8,6 +8,10 @@ use Jeekens\Console\Command;
 use Jeekens\Console\CommandInterface;
 use function sprintf;
 
+/**
+ * Class HelpCommand
+ * @package Jeekens\Console\Command
+ */
 class HelpCommand implements CommandInterface
 {
 
@@ -15,11 +19,6 @@ class HelpCommand implements CommandInterface
 
     public $options = [
         '-n, --name' => 'command name',
-        '-a, --arguments' => 'If true, show command arguments can also be an index of arguments.',
-        '-e, --example' => 'If true, show command example.',
-        '-u, --usage' => 'If true, show command usage.',
-        '-i, --info' => 'If true, show command describe. ',
-        '-o, --options' => 'If true, show command options, can be an option name.',
     ];
 
     public $usage = 'Used to output help content.';
@@ -28,8 +27,6 @@ class HelpCommand implements CommandInterface
 
     public $arguments = [
         'Command name.',
-        'Index of arguments.',
-        'Option name'
     ];
 
     /**
@@ -38,7 +35,7 @@ class HelpCommand implements CommandInterface
      * @throws \Jeekens\Console\Exception\Exception
      * @throws \Jeekens\Console\Exception\UnknownColorException
      */
-    public function example()
+    public function getExample()
     {
         return sprintf('Execute: php %s help "commandName"', Command::getScript());
     }

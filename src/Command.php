@@ -5,6 +5,7 @@ namespace Jeekens\Console;
 
 
 use Closure;
+use Jeekens\Console\Command\NoStyleCommand;
 use Jeekens\Console\Output\Style;
 use Throwable;
 use Jeekens\Basics\Fs;
@@ -104,15 +105,17 @@ final class Command
      * @var array
      */
     private static $defaultGlobalCommands = [
+        NoStyleCommand::class,
         HelpCommand::class,
     ];
 
     /**
      * @var array
      */
-    private static $globalOptions = [
-        '-h, --help' => 'help',
-        '--no-style' => 'noStyle',
+    private static $globalOptionsMap = [
+        'h' => 'help',
+        'help' => 'help',
+        'no-style' => 'noStyle',
     ];
 
     /**
@@ -140,6 +143,11 @@ final class Command
     public static function createCommand($globalCommand = null, ?Input $input = null, ?Output $output = null)
     {
         if (!(self::$_singleton instanceof self)) {
+
+            if (empty($globalCommand)) {
+                $globalCommand = self::$defaultGlobalCommands;
+            }
+
             self::$_singleton = new self($globalCommand, $input, $output);
         }
 
@@ -368,6 +376,19 @@ final class Command
             return self::getCommand()
                     ->args[$key] ?? $default;
         }
+    }
+
+    /**
+     * 设置命令参数
+     *
+     * @param array $param
+     *
+     * @throws Exception\Exception
+     * @throws Exception\UnknownColorException
+     */
+    public static function setParam(array $param)
+    {
+        self::getCommand()->args = $param;
     }
 
     /**
@@ -746,6 +767,22 @@ final class Command
     }
 
     /**
+     * 执行一个命令
+     *
+     * @param string $commandName
+     *
+     * @return bool
+     *
+     * @throws Exception\Exception
+     * @throws Exception\UnknownColorException
+     */
+    public static function execute(string $commandName)
+    {
+        return self::getCommand()
+            ->call($commandName);
+    }
+
+    /**
      * 隐藏用户输入内容
      *
      * @return array|string
@@ -883,27 +920,37 @@ final class Command
             if ($result === false) {
                 return false;
             }
-
-            if (!empty($currentCommand) && ($command = $this->commands[$currentCommand] ?? null) ||
-                ($command = $this->baseCommands[$currentCommand] ?? null)) {
-
-                if ($command['command'] instanceof Closure) {
-                    return $command['command']();
-                } else {
-                    return $this->commandHandle($command);
-                }
-
-            } elseif (!empty($currentCommand)) {
-                self::error(
-                    sprintf('Command <background_white>%s</background_white> Notfound.', $currentCommand),
-                    1
-                );
-            }
-
-            return $result;
+            return $this->call($currentCommand);
         }
 
         return null;
+    }
+
+    /**
+     * @param string $currentCommand
+     *
+     * @return bool
+     *
+     * @throws Exception\Exception
+     * @throws Exception\UnknownColorException
+     */
+    private function call($currentCommand)
+    {
+        if (!empty($currentCommand) && ($command = $this->commands[$currentCommand] ?? null) ||
+            ($command = $this->baseCommands[$currentCommand] ?? null)) {
+
+            if ($command['command'] instanceof Closure) {
+                return $command['command']();
+            } else {
+                return $this->commandHandle($command);
+            }
+
+        } elseif (!empty($currentCommand)) {
+            self::error(
+                sprintf('Command <background_white>%s</background_white> Notfound.', $currentCommand),
+                1
+            );
+        }
     }
 
     /**
