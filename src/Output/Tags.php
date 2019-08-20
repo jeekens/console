@@ -4,7 +4,6 @@
 namespace Jeekens\Console\Output;
 
 
-use Jeekens\Basics\Os;
 use function sort;
 use function reset;
 use function strpos;
@@ -87,37 +86,6 @@ class Tags
      */
     protected $currentRegex = '';
 
-    /**
-     * @var bool
-     */
-    protected static $isAnsi = true;
-
-    /**
-     * 开启ansi
-     */
-    public static function enableAnsi()
-    {
-        self::$isAnsi = true;
-    }
-
-    /**
-     * 关闭ansi
-     */
-    public static function disableAnsi()
-    {
-        self::$isAnsi = false;
-    }
-
-    /**
-     * 判断当前是否支持ansi
-     *
-     * @return bool
-     */
-    public static function isEnableAnsi()
-    {
-        return self::$isAnsi && Os::systemHasAnsiSupport(Os::isWin());
-    }
-
     public function __construct()
     {
         $this->build();
@@ -155,7 +123,7 @@ class Tags
      */
     public function apply(string $str)
     {
-        if (self::isEnableAnsi()) {
+        if (Style::isEnableAnsi()) {
             $currentCode = $this->getCurrent($str);
             return $this->start($currentCode) . $this->parse($str, $currentCode) . $this->end();
         } else {

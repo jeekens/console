@@ -160,6 +160,49 @@ final class Command
     }
 
     /**
+     * 开启输出缓冲
+     *
+     * @throws Exception\Exception
+     * @throws Exception\UnknownColorException
+     */
+    public static function enableBuffer()
+    {
+        self::getCommand()
+            ->output()
+            ->enableBuffer();
+    }
+
+    /**
+     * 关闭输出缓冲
+     *
+     * @param bool $isFlush
+     *
+     * @throws Exception\Exception
+     * @throws Exception\UnknownColorException
+     */
+    public static function disableBuffer(bool $isFlush = true)
+    {
+        self::getCommand()
+            ->output()
+            ->disableBuffer($isFlush);
+    }
+
+    /**
+     * 判断是否开启输出缓冲区
+     *
+     * @return bool
+     *
+     * @throws Exception\Exception
+     * @throws Exception\UnknownColorException
+     */
+    public static function isEnableBuffer()
+    {
+        return self::getCommand()
+            ->output()
+            ->isEnableBuff();
+    }
+
+    /**
      * 获取当前命令的名称，此方法只有boot后才能获取到正确的值
      *
      * @return string|null
@@ -616,9 +659,11 @@ final class Command
      */
     public static function clear()
     {
-        self::getCommand()
-            ->output()
-            ->write("\033[H\033[2J", false);
+        if (Style::isEnableAnsi()) {
+            self::getCommand()
+                ->output()
+                ->write("\033[H\033[2J", false);
+        }
     }
 
     /**
@@ -986,7 +1031,7 @@ final class Command
                 }
             }
         } catch (InputCommandFormatException $e) {
-            if (Tags::isEnableAnsi()) {
+            if (Style::isEnableAnsi()) {
                 $error = Style::tags()->apply(sprintf('<red>%s</red>', $e->getMessage()));
             } else {
                 $error = $e->getMessage();
