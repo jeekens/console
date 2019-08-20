@@ -11,7 +11,7 @@ if (! function_exists('clear_style')) {
     function clear_style(string $string): string
     {
         return preg_replace([
-            "(\033|\e|\x1B)[[0-9]+?(?:;[0-9]+?)*?m"
+            "~(\033|\e|\x1B)\[[0-9]+?(?:;[0-9]+?)*?m~"
         ], '', $string);
     }
 }

@@ -11,7 +11,6 @@ use Throwable;
 use Jeekens\Basics\Fs;
 use Jeekens\Basics\Os;
 use Jeekens\Console\Input\Input;
-use Jeekens\Console\Output\Tags;
 use Jeekens\Console\Output\Output;
 use Jeekens\Console\Command\HelpCommand;
 use Jeekens\Console\Exception\InputCommandFormatException;
@@ -1074,6 +1073,11 @@ final class Command
             if ($globalCommand) {
                 $commands = to_array($globalCommand);
                 foreach ($commands as $command) {
+
+                    if (is_string($command)) {
+                        $command = new $command();
+                    }
+
                     $this->addCommand($command, true);
                 }
             }
