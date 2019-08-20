@@ -40,19 +40,23 @@ class NoStyleCommand implements CommandInterface
      */
     public function handle()
     {
-        Style::disableAnsi();
-        $param = Command::getParam();
-        $commandName = $param[1] ?? null;
+        $bool = Style::isEnableAnsi();
+        $bool && Style::disableAnsi();
 
-        if (! is_string($commandName) || empty($commandName)){
-            Command::error('Command name is must be a string.', true);
+        if (empty(Command::getCommandName()) && $bool) {
+            $param = Command::getParam();
+            $commandName = $param[1] ?? null;
+
+            if (! is_string($commandName) || empty($commandName)){
+                Command::error('Command name is must be a string.', true);
+            }
+
+            $param = array_values($param);
+            unset($param[0]);
+            Command::setParam($param);
+
+            return Command::execute($commandName);
         }
-
-        $param = array_values($param);
-        unset($param[0]);
-        Command::setParam($param);
-
-        return Command::execute($commandName);
     }
 
     /**
