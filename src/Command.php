@@ -417,13 +417,8 @@ final class Command
     {
         $singleton = self::getCommand();
         if ($singleton->isBoot()) return;
-        $commands = [];
 
-        if (!is_array($command)) {
-            $commands[] = $command;
-        } else {
-            $commands = $command;
-        }
+        $commands = to_array($command);
 
         foreach ($commands as $command) {
             $singleton->addCommand($command);
