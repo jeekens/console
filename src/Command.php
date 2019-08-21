@@ -865,7 +865,7 @@ final class Command
      * @throws Exception\Exception
      * @throws Exception\UnknownColorException
      */
-    public static function read(int $length = 1024)
+    public static function read(int $length = 4096)
     {
         return self::getCommand()
             ->input()
