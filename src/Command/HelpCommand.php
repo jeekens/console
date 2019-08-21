@@ -17,16 +17,16 @@ class HelpCommand implements CommandInterface
 
     public $name = 'help';
 
-    public $options = [
-        '-n, --name' => 'command name',
-    ];
-
     public $usage = 'Used to output help content.';
 
     public $describe = 'Help command.';
 
     public $arguments = [
         'Command name.',
+    ];
+
+    public $bindOpts = [
+        '-h, --help'
     ];
 
     /**

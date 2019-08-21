@@ -20,16 +20,16 @@ class NoStyleCommand implements CommandInterface
 
     public $name = 'noStyle';
 
-    public $options = [
-        '--no-style' => 'If true, no ansi string output.',
-    ];
-
     public $usage = 'Used to no ansi string output.';
 
     public $describe = 'No ansi string output.';
 
     public $arguments = [
         'Command name.',
+    ];
+
+    public $bindOpts = [
+        '--no-style'
     ];
 
     /**

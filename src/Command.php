@@ -4,6 +4,9 @@
 namespace Jeekens\Console;
 
 
+use function array_key_exists;
+use function array_merge;
+use function class_get;
 use Closure;
 use Jeekens\Console\Command\NoStyleCommand;
 use Jeekens\Console\Output\Style;
@@ -17,13 +20,11 @@ use Jeekens\Console\Exception\InputCommandFormatException;
 use function key;
 use function copy;
 use function exec;
-use function next;
 use function to_array;
 use function trim;
 use function reset;
 use function ltrim;
 use function getenv;
-use function is_int;
 use function unlink;
 use function strpos;
 use function current;
@@ -111,16 +112,22 @@ final class Command
     /**
      * @var array
      */
-    private static $globalOptionsMap = [
-        'h' => 'help',
-        'help' => 'help',
-        'no-style' => 'noStyle',
-    ];
+    private $globalOptionsMap = [];
 
     /**
      * @var array
      */
-    private static $groupGlobalOptions = [];
+    private $groupGlobalOptionsMap = [];
+
+    /**
+     * @var array
+     */
+    private $groupGlobalOptions = [];
+
+    /**
+     * @var array
+     */
+    private $globalOptions = [];
 
     /**
      * @var self;
@@ -246,6 +253,34 @@ final class Command
     public static function getCommandNames()
     {
         return array_keys(self::getCommandInfos());
+    }
+
+    /**
+     * 获取全局参数绑定信息
+     *
+     * @return array
+     *
+     * @throws Exception\Exception
+     * @throws Exception\UnknownColorException
+     */
+    public static function getBindOpts()
+    {
+        return self::getCommand()
+            ->globalOptions;
+    }
+
+    /**
+     * 获取分组参数绑定信息
+     *
+     * @return array
+     *
+     * @throws Exception\Exception
+     * @throws Exception\UnknownColorException
+     */
+    public static function getGroupBindOpts()
+    {
+        return self::getCommand()
+            ->groupGlobalOptions;
     }
 
     /**
@@ -899,6 +934,11 @@ final class Command
             $result = true;
             $this->parseCommand();
             $currentCommand = $this->command;
+            $currentGroup = null;
+
+            if (strpos($currentCommand, ':')) {
+                $currentGroup = explode(':', $currentCommand, 2)[0];
+            }
 
             if (!empty($this->forwardCommand)) {
                 if (($forwardCommand = $this->commands[$this->forwardCommand] ?? null) ||
@@ -914,6 +954,27 @@ final class Command
             if ($result === false) {
                 return false;
             }
+
+            $buildCommand = [];
+            $optionBind = $this->globalOptionsMap;
+
+            if (! empty($this->groupGlobalOptionsMap[$currentGroup])) {
+                $optionBind = array_merge($optionBind, $this->groupGlobalOptionsMap[$currentGroup]);
+            }
+
+            foreach ($optionBind as $key => $command) {
+                if ($this->input()
+                    ->hasArrayOpts($key) && ! array_key_exists($command, $buildCommand)) {
+
+                    $buildCommand[$command] = $this->call($command);
+
+                    if ($buildCommand[$command] === false) {
+                        return false;
+                    }
+
+                }
+            }
+
             return $this->call($currentCommand);
         }
 
@@ -945,6 +1006,8 @@ final class Command
                 1
             );
         }
+
+        return null;
     }
 
     /**
@@ -953,24 +1016,11 @@ final class Command
     private function parseCommand()
     {
         $args = $this->input()
-            ->getArgs();
-        $key = null;
+                ->getArgs() ?? [];
 
         reset($args);
-
-        while (1) {
-            $key = key($args);
-            if ($key === null) break;
-
-            if (is_int($key)) {
-                $command = current($args);
-                break;
-            } else {
-                next($args);
-                continue;
-            }
-
-        }
+        $command = current($args);
+        $key = key($args);
 
         if (!empty($command)) {
             $this->command = $command;
@@ -1178,10 +1228,50 @@ final class Command
      */
     private function commandOptionsParse($command): array
     {
+        $commandName = class_get($command, 'name');
         $options = class_get($command, 'options');
+        $bindOption = class_get($command, 'bindOpts');
+        $usage = class_get($command, 'usage');
         $canCallback = [];
+        $groupName = '';
 
-        if (is_array($options)) {
+        if (strpos($commandName, ':')) {
+            $groupName = explode(':', $commandName)[0];
+        }
+
+        if (! empty($bindOption)) {
+            if (empty($groupName)) {
+                foreach ($bindOption as $item) {
+                    if (strpos($item, ',')) {
+                        $names = explode(',', $item, 2);
+                        foreach ($names as $name) {
+                            $option = ltrim(ltrim($this->commandNameFilter($name), '-'), '-');
+                            $this->globalOptionsMap[$option] = $commandName;
+                        }
+                    } else {
+                        $option = ltrim(ltrim($this->commandNameFilter($item), '-'), '-');
+                        $this->globalOptionsMap[$option] = $commandName;
+                    }
+                    $this->globalOptions[$item] = $usage;
+                }
+            } else {
+                foreach ($bindOption as $item) {
+                    if (strpos($item, ',')) {
+                        $names = explode(',', $item, 2);
+                        foreach ($names as $name) {
+                            $option = ltrim(ltrim($this->commandNameFilter($name), '-'), '-');
+                            $this->groupGlobalOptionsMap[$option] = $commandName;
+                        }
+                    } else {
+                        $option = ltrim(ltrim($this->commandNameFilter($item), '-'), '-');
+                        $this->groupGlobalOptionsMap[$option] = $commandName;
+                    }
+                    $this->groupGlobalOptions[$item] = $usage;
+                }
+            }
+        }
+
+        if (! empty($options) && is_array($options)) {
             $keys = array_keys($options);
             foreach ($keys as $key) {
                 if (strpos($key, ',')) {
