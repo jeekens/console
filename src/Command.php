@@ -745,7 +745,7 @@ final class Command
      */
     public static function clear()
     {
-        if (Style::isEnableAnsi()) {
+        if (Os::systemHasAnsiSupport(Os::isWin())) {
             self::getCommand()
                 ->output()
                 ->write("\033[H\033[2J", false);

@@ -43,7 +43,7 @@ class NoStyleCommand implements CommandInterface
         $bool = Style::isEnableAnsi();
         $bool && Style::disableAnsi();
 
-        if (empty(Command::getCommandName()) && $bool) {
+        if (empty(Command::getFullCommandName()) && $bool) {
             $param = Command::getParam();
             $commandName = $param[1] ?? null;
 

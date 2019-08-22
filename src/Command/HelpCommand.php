@@ -38,7 +38,7 @@ class HelpCommand implements CommandInterface
      */
     public function getExample()
     {
-        return sprintf('Execute: php %s help "commandName"', Command::getScript());
+        return sprintf('php %s help "commandName"', Command::getScript());
     }
 
 
@@ -138,6 +138,14 @@ class HelpCommand implements CommandInterface
                         ->addColumn(sprintf(' <green>%s</green>', $opt))
                         ->addColumn($des);
                 }
+            }
+
+            if (($example = class_get($command, 'example'))
+                && is_string($example) && $example != '') {
+                $table->addRow(null, true)
+                    ->addColumn('<yellow>Example</yellow>:')
+                    ->addRow()
+                    ->addColumn('  '.$example);
             }
 
             $table->hideBorder()
