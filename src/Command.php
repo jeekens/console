@@ -64,6 +64,16 @@ final class Command
     /**
      * @var string|null
      */
+    private $fullCommand;
+
+    /**
+     * @var string|null
+     */
+    private $group;
+
+    /**
+     * @var string|null
+     */
     private $forwardCommand;
 
     /**
@@ -226,7 +236,33 @@ final class Command
      */
     public static function getCommandName(): ?string
     {
-        return self::getCommand()->returnCommandName();
+        return self::getCommand()->command;
+    }
+
+    /**
+     * 获取完整的命令名称，此方法只有boot后才能获取到正确的值
+     *
+     * @return string|null
+     *
+     * @throws Exception\Exception
+     * @throws Exception\UnknownColorException
+     */
+    public static function getFullCommandName(): ?string
+    {
+        return self::getCommand()->fullCommand;
+    }
+
+    /**
+     * 获取命令的分组名，此方法只有boot后才能获取到正确的值
+     *
+     * @return string|null
+     *
+     * @throws Exception\Exception
+     * @throws Exception\UnknownColorException
+     */
+    public static function getCommandGroup(): ?string
+    {
+        return self::getCommand()->group;
     }
 
     /**
@@ -399,7 +435,7 @@ final class Command
      */
     public static function getParam($key = null, $default = null)
     {
-        if (is_numeric($key) || is_string($key)) {
+        if (!is_numeric($key) && !is_string($key)) {
             return null;
         }
 
@@ -535,7 +571,7 @@ final class Command
      * @throws Exception\Exception
      * @throws Exception\UnknownColorException
      */
-    public static function line(string $info, $quit = false)
+    public static function line(string $info = '', $quit = false)
     {
         return self::write($info, true, $quit);
     }
@@ -933,12 +969,8 @@ final class Command
             $this->isBoot = true;
             $result = true;
             $this->parseCommand();
-            $currentCommand = $this->command;
-            $currentGroup = null;
-
-            if (strpos($currentCommand, ':')) {
-                $currentGroup = explode(':', $currentCommand, 2)[0];
-            }
+            $currentCommand = $this->fullCommand;
+            $currentGroup = $this->group;
 
             if (!empty($this->forwardCommand)) {
                 if (($forwardCommand = $this->commands[$this->forwardCommand] ?? null) ||
@@ -958,13 +990,13 @@ final class Command
             $buildCommand = [];
             $optionBind = $this->globalOptionsMap;
 
-            if (! empty($this->groupGlobalOptionsMap[$currentGroup])) {
+            if (!empty($this->groupGlobalOptionsMap[$currentGroup])) {
                 $optionBind = array_merge($optionBind, $this->groupGlobalOptionsMap[$currentGroup]);
             }
 
             foreach ($optionBind as $key => $command) {
                 if ($this->input()
-                    ->hasArrayOpts($key) && ! array_key_exists($command, $buildCommand)) {
+                        ->hasArrayOpts($key) && !array_key_exists($command, $buildCommand)) {
 
                     $buildCommand[$command] = $this->call($command);
 
@@ -1023,7 +1055,13 @@ final class Command
         $key = key($args);
 
         if (!empty($command)) {
-            $this->command = $command;
+            $this->fullCommand = $command;
+            $tmp = explode(':', $command, 2);
+
+            if (count($tmp) > 1) {
+                [$this->group, $this->command] = $tmp;
+            }
+
             unset($args[$key]);
             $this->args = $args;
         } else {
@@ -1239,7 +1277,7 @@ final class Command
             $groupName = explode(':', $commandName)[0];
         }
 
-        if (! empty($bindOption)) {
+        if (!empty($bindOption)) {
             if (empty($groupName)) {
                 foreach ($bindOption as $item) {
                     if (strpos($item, ',')) {
@@ -1271,7 +1309,7 @@ final class Command
             }
         }
 
-        if (! empty($options) && is_array($options)) {
+        if (!empty($options) && is_array($options)) {
             $keys = array_keys($options);
             foreach ($keys as $key) {
                 if (strpos($key, ',')) {
@@ -1330,18 +1368,10 @@ final class Command
     private function commandNameFilter(string $string): string
     {
         return preg_replace(
-            "/(\t|\n|\v|\f|\r| |\xC2\x85|\xc2\xa0|\xe1\xa0\x8e|\xe2\x80[\x80-\x8D]|\xe2\x80\xa8|\xe2\x80\xa9|\xe2\x80\xaF|\xe2\x81\x9f|\xe2\x81\xa0|\xe3\x80\x80|\xef\xbb\xbf)+/",
+            "/\s+/",
             '',
             $string
         );
-    }
-
-    /**
-     * @return string|null
-     */
-    private function returnCommandName()
-    {
-        return $this->command;
     }
 
     /**
