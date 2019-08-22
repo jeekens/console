@@ -101,7 +101,7 @@ class HelpCommand implements CommandInterface
 
                 foreach ($arguments as $des) {
                     $table->addRow()
-                        ->addColumn(sprintf('<green>argument%s</green>', $i))
+                        ->addColumn(sprintf(' <green>argument%s</green>', $i))
                         ->addColumn('  '.$des);
                 }
             }
@@ -112,7 +112,7 @@ class HelpCommand implements CommandInterface
 
                 foreach ($globalOpts as $opt => $des) {
                     $table->addRow()
-                        ->addColumn(sprintf('<green>%s</green>', $opt))
+                        ->addColumn(sprintf(' <green>%s</green>', $opt))
                         ->addColumn($des);
                 }
 
@@ -124,7 +124,7 @@ class HelpCommand implements CommandInterface
 
                 foreach ($go as $opt => $des) {
                     $table->addRow()
-                        ->addColumn(sprintf('<green>%s</green>', $opt))
+                        ->addColumn(sprintf(' <green>%s</green>', $opt))
                         ->addColumn($des);
                 }
             }
@@ -135,7 +135,7 @@ class HelpCommand implements CommandInterface
 
                 foreach ($options as $opt => $des) {
                     $table->addRow()
-                        ->addColumn(sprintf('<green>%s</green>', $opt))
+                        ->addColumn(sprintf(' <green>%s</green>', $opt))
                         ->addColumn($des);
                 }
             }
