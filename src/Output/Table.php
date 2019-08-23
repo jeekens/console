@@ -24,20 +24,50 @@ class Table
     const HEADER_INDEX = -1;
     const HR = 'HR';
 
-    /** @var array Array of table data */
+    /**
+     * @var array Array of table data
+     */
     protected $data = [];
-    /** @var boolean Border shown or not */
+
+    /**
+     * @var bool Border shown or not
+     */
     protected $border = true;
-    /** @var boolean All borders shown or not */
+
+    /**
+     * @var bool All borders shown or not
+     */
     protected $allBorders = false;
-    /** @var integer Table padding */
+
+    /**
+     * @var int Table padding
+     */
     protected $padding = 1;
-    /** @var integer Table left margin */
+
+    /**
+     * @var int Table left margin
+     */
     protected $indent = 0;
-    /** @var integer */
+
+    /**
+     * @var int
+     */
     private $rowIndex = -1;
-    /** @var array */
+
+    /**
+     * @var array
+     */
     private $columnWidths = [];
+
+    /**
+     * @var int
+     */
+    private $tableIndex = 0;
+
+    /**
+     * @var int[]
+     */
+    private $maxRowWidth = [];
 
     /**
      * Adds a column to the table header
@@ -48,7 +78,7 @@ class Table
      */
     public function addHeader($content = '')
     {
-        $this->data[self::HEADER_INDEX][] = $content;
+        $this->data[$this->tableIndex][self::HEADER_INDEX][] = $content;
 
         return $this;
     }
@@ -62,7 +92,7 @@ class Table
      */
     public function setHeaders(array $content)
     {
-        $this->data[self::HEADER_INDEX] = $content;
+        $this->data[$this->tableIndex][self::HEADER_INDEX] = $content;
 
         return $this;
     }
@@ -70,9 +100,10 @@ class Table
     /**
      * Get the row of header
      */
-    public function getHeaders()
+    public function getHeaders(int $tableIndex = null)
     {
-        return isset($this->data[self::HEADER_INDEX]) ? $this->data[self::HEADER_INDEX] : null;
+        $tableIndex = $tableIndex ?? $this->tableIndex;
+        return isset($this->data[$tableIndex][self::HEADER_INDEX]) ?? null;
     }
 
     /**
@@ -86,14 +117,24 @@ class Table
         $this->rowIndex++;
 
         if (empty($data) && $br) {
-            $this->data[$this->rowIndex][] = null;
+            $this->data[$this->tableIndex][$this->rowIndex][] = null;
             $this->rowIndex++;
         } elseif (! empty($data)) {
             foreach ($data as $col => $content) {
-                $this->data[$this->rowIndex][$col] = $content;
+                $this->data[$this->tableIndex][$this->rowIndex][$col] = $content;
             }
         }
 
+        return $this;
+    }
+
+    /**
+     * @return $this
+     */
+    public function addTable()
+    {
+        $this->tableIndex++;
+        $this->rowIndex = -1;
         return $this;
     }
 
@@ -110,10 +151,10 @@ class Table
     {
         $row = $row === null ? $this->rowIndex : $row;
         if ($col === null) {
-            $col = isset($this->data[$row]) ? count($this->data[$row]) : 0;
+            $col = isset($this->data[$this->tableIndex][$row]) ? count($this->data[$this->tableIndex][$row]) : 0;
         }
 
-        $this->data[$row][$col] = $content;
+        $this->data[$this->tableIndex][$row][$col] = $content;
 
         return $this;
     }
@@ -191,7 +232,7 @@ class Table
     public function addBorderLine()
     {
         $this->rowIndex++;
-        $this->data[$this->rowIndex] = self::HR;
+        $this->data[$this->tableIndex][$this->rowIndex] = self::HR;
 
         return $this;
     }
@@ -213,29 +254,35 @@ class Table
     public function getTable()
     {
         $this->calculateColumnWidth();
+        $output = '';
+        $keys = end($this->data);
+        $last = key($keys);
 
-        $output = $this->border ? $this->getBorderLine() : '';
+        foreach ($this->data as $tableIndex => $table) {
 
-        foreach ($this->data as $y => $row) {
-            if ($row === self::HR) {
-                if (!$this->allBorders) {
-                    $output .= $this->getBorderLine();
-                    unset($this->data[$y]);
+            $output .= $this->border ? $this->getBorderLine($tableIndex) : '';
+
+            foreach ($table as $y => $row) {
+                if ($row === self::HR) {
+                    if (!$this->allBorders) {
+                        $output .= $this->getBorderLine($tableIndex);
+                        unset($this->data[$tableIndex][$y]);
+                    }
+
+                    continue;
                 }
 
-                continue;
-            }
+                foreach ($row as $x => $cell) {
+                    $output .= $this->getCellOutput($tableIndex, $x, $row);
+                }
+                $output .= PHP_EOL;
 
-            foreach ($row as $x => $cell) {
-                $output .= $this->getCellOutput($x, $row);
-            }
-            $output .= PHP_EOL;
-
-            if ($y === self::HEADER_INDEX) {
-                $output .= $this->getBorderLine();
-            } else {
-                if ($this->allBorders) {
-                    $output .= $this->getBorderLine();
+                if ($y === self::HEADER_INDEX) {
+                    $output .= $this->getBorderLine($tableIndex);
+                } else {
+                    if ($this->allBorders) {
+                        $output .= $this->getBorderLine($tableIndex);
+                    }
                 }
             }
         }
@@ -249,28 +296,33 @@ class Table
 
     /**
      * Get the printable border line
+     *
+     * @param int $table
+     *
      * @return string
      */
-    private function getBorderLine()
+    private function getBorderLine(?int $table = null)
     {
         $output = '';
 
-        if (isset($this->data[0])) {
-            $columnCount = count($this->data[0]);
-        } elseif (isset($this->data[self::HEADER_INDEX])) {
-            $columnCount = count($this->data[self::HEADER_INDEX]);
-        } else {
-            return $output;
-        }
-
-        for ($col = 0; $col < $columnCount; $col++) {
-            $output .= $this->getCellOutput($col);
-        }
-
         if ($this->border) {
+            $table = $table ?? $this->tableIndex;
+
+            if (isset($this->data[$table][0])) {
+                $columnCount = count($this->data[$table][0]);
+            } elseif (isset($this->data[$table][self::HEADER_INDEX])) {
+                $columnCount = count($this->data[$table][self::HEADER_INDEX]);
+            } else {
+                return $output;
+            }
+
+            for ($col = 0; $col < $columnCount; $col++) {
+                $output .= $this->getCellOutput($table, $col);
+            }
+
             $output .= '+';
+            $output .= PHP_EOL;
         }
-        $output .= PHP_EOL;
 
         return $output;
     }
@@ -282,12 +334,11 @@ class Table
      * @param array $row The table row
      * @return string
      */
-    private function getCellOutput($index, $row = null)
+    private function getCellOutput($table, $index, $row = null)
     {
         $cell = $row ? $row[$index] : '-';
-        $width = $this->columnWidths[$index];
+        $width = $this->columnWidths[$table][$index];
         $padding = str_repeat($row ? ' ' : '-', $this->padding);
-
         $output = '';
 
         if ($index === 0) {
@@ -318,18 +369,26 @@ class Table
      */
     private function calculateColumnWidth()
     {
-        foreach ($this->data as $y => $row) {
-            if (is_array($row)) {
-                foreach ($row as $x => $col) {
-                    $content = clear_style(Style::tags()
-                        ->applyNoAnsi(preg_replace('#\x1b[[][^A-Za-z]*[A-Za-z]#', '', $col)));
-                    if (!isset($this->columnWidths[$x])) {
-                        $this->columnWidths[$x] = mb_strlen($content, 'UTF-8');
-                    } else {
-                        if (mb_strlen($content, 'UTF-8') > $this->columnWidths[$x]) {
-                            $this->columnWidths[$x] = mb_strlen($content, 'UTF-8');
+        foreach ($this->data as $tableIndex => $table) {
+            foreach ($table as $y => $row) {
+                $tmp = 0;
+                if (is_array($row)) {
+                    foreach ($row as $x => $col) {
+                        $content = clear_style(Style::tags()
+                            ->applyNoAnsi(preg_replace('#\x1b[[][^A-Za-z]*[A-Za-z]#', '', $col)));
+                        if (!isset($this->columnWidths[$tableIndex][$x])) {
+                            $this->columnWidths[$tableIndex][$x] = mb_strlen($content, 'UTF-8');
+                            $tmp += $this->columnWidths[$tableIndex][$x];
+                        } else {
+                            if (mb_strlen($content, 'UTF-8') > $this->columnWidths[$tableIndex][$x]) {
+                                $this->columnWidths[$tableIndex][$x] = mb_strlen($content, 'UTF-8');
+                                $tmp += $this->columnWidths[$tableIndex][$x];
+                            }
                         }
                     }
+                }
+                if (empty($this->maxRowWidth[$tableIndex]) || $this->maxRowWidth[$tableIndex] < $tmp) {
+                    $this->maxRowWidth[$tableIndex] = $tmp;
                 }
             }
         }
