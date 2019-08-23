@@ -1154,9 +1154,6 @@ final class Command
      * @param null $globalCommand
      * @param Input|null $input
      * @param Output|null $output
-     *
-     * @throws Exception\Exception
-     * @throws Exception\UnknownColorException
      */
     private function __construct($globalCommand = null, ?Input $input = null, ?Output $output = null)
     {
