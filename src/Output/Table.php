@@ -70,40 +70,24 @@ class Table
     private $maxRowWidth = [];
 
     /**
+     * @var array
+     */
+    private $headerPadType = [];
+
+    /**
      * Adds a column to the table header
      *
-     * @param mixed  Header cell content
+     * @param $content
+     * @param $padType
      *
      * @return $this
      */
-    public function addHeader($content = '')
+    public function addHeader($content = '', $padType = STR_PAD_RIGHT)
     {
         $this->data[$this->tableIndex][self::HEADER_INDEX][] = $content;
+        $this->headerPadType[$this->tableIndex][] = $padType;
 
         return $this;
-    }
-
-    /**
-     * Set headers for the columns in one-line
-     *
-     * @param array  Array of header cell content
-     *
-     * @return $this
-     */
-    public function setHeaders(array $content)
-    {
-        $this->data[$this->tableIndex][self::HEADER_INDEX] = $content;
-
-        return $this;
-    }
-
-    /**
-     * Get the row of header
-     */
-    public function getHeaders(int $tableIndex = null)
-    {
-        $tableIndex = $tableIndex ?? $this->tableIndex;
-        return isset($this->data[$tableIndex][self::HEADER_INDEX]) ?? null;
     }
 
     /**
@@ -255,14 +239,15 @@ class Table
     {
         $this->calculateColumnWidth();
         $output = '';
-        $keys = end($this->data);
-        $last = key($keys);
+        end($this->data);
+        $last = key($this->data);
 
         foreach ($this->data as $tableIndex => $table) {
 
             $output .= $this->border ? $this->getBorderLine($tableIndex) : '';
-
+            $r = 0;
             foreach ($table as $y => $row) {
+                $r++;
                 if ($row === self::HR) {
                     if (!$this->allBorders) {
                         $output .= $this->getBorderLine($tableIndex);
@@ -278,10 +263,16 @@ class Table
                 $output .= PHP_EOL;
 
                 if ($y === self::HEADER_INDEX) {
-                    $output .= $this->getBorderLine($tableIndex);
-                } else {
-                    if ($this->allBorders) {
+                    $c = count($table);
+                    if (!($c === 1 && $last !== $tableIndex)) {
                         $output .= $this->getBorderLine($tableIndex);
+                    }
+                } else {
+                    $c = count($row);
+                    if ($this->allBorders) {
+                        if ( $r <= $c || $last === $tableIndex) {
+                            $output .= $this->getBorderLine($tableIndex);
+                        }
                     }
                 }
             }
@@ -330,8 +321,10 @@ class Table
     /**
      * Get the printable cell content
      *
+     * @param $table
      * @param integer $index The column index
      * @param array $row The table row
+     *
      * @return string
      */
     private function getCellOutput($table, $index, $row = null)
@@ -355,6 +348,7 @@ class Table
         $delta = mb_strlen($cell, 'UTF-8') - mb_strlen($content, 'UTF-8');
         $output .= $this->strPadUnicode($cell, $width + $delta, $row ? ' ' : '-'); # cell content
         $output .= $padding; # right padding
+
         if ($row && $index == count($row) - 1 && $this->border) {
             $output .= $row ? '|' : '+';
         }
@@ -402,16 +396,17 @@ class Table
      * @param $str
      * @param $padLength
      * @param string $padString
-     * @param int $dir
+     * @param $pad_type
      *
      * @return string|null
      */
-    private function strPadUnicode($str, $padLength, $padString = ' ', $dir = STR_PAD_RIGHT)
+    private function strPadUnicode($str, $padLength, $padString = ' ', $pad_type = STR_PAD_RIGHT)
     {
-        $strLen = mb_strlen($str, 'UTF-8');
-        $padStrLen = mb_strlen($padString, 'UTF-8');
+        $strLen = mb_strlen(clear_style(Style::tags()->applyNoAnsi($str)), 'UTF-8');
+        $padStrLen = mb_strlen(clear_style(Style::tags()->applyNoAnsi($padString)), 'UTF-8');
+        $actualLength = mb_strlen($str, 'UTF-8');
 
-        if (!$strLen && ($dir == STR_PAD_RIGHT || $dir == STR_PAD_LEFT)) {
+        if (!$strLen && ($pad_type == STR_PAD_RIGHT || $pad_type == STR_PAD_LEFT)) {
             $strLen = 1;
         }
 
@@ -421,13 +416,13 @@ class Table
 
         $result = null;
         $repeat = ceil($strLen - $padStrLen + $padLength);
-        if ($dir == STR_PAD_RIGHT) {
+        if ($pad_type == STR_PAD_RIGHT) {
             $result = $str . str_repeat($padString, (int)$repeat);
-            $result = mb_substr($result, 0, $padLength, 'UTF-8');
-        } elseif ($dir == STR_PAD_LEFT) {
+            $result = mb_substr($result, 0, $actualLength - $strLen + $padLength, 'UTF-8');
+        } elseif ($pad_type == STR_PAD_LEFT) {
             $result = str_repeat($padString, $repeat) . $str;
-            $result = mb_substr($result, -$padLength, null, 'UTF-8');
-        } elseif ($dir == STR_PAD_BOTH) {
+            $result = mb_substr($result, -($actualLength - $strLen + $padLength), null, 'UTF-8');
+        } elseif ($pad_type == STR_PAD_BOTH) {
             $length = ($padLength - $strLen) / 2;
             $repeat = ceil($length / $padStrLen);
             $result = mb_substr(str_repeat($padString, (int)$repeat), 0, floor($length), 'UTF-8')

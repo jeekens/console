@@ -165,6 +165,18 @@ final class Command
             }
 
             self::$_singleton = new self($globalCommand, $input, $output);
+
+            if ($globalCommand) {
+                $commands = to_array($globalCommand);
+                foreach ($commands as $command) {
+
+                    if (is_string($command)) {
+                        $command = new $command();
+                    }
+
+                    self::$_singleton->addCommand($command, true);
+                }
+            }
         }
 
         return self::$_singleton;
@@ -542,6 +554,14 @@ final class Command
     {
         return self::getCommand()
             ->bootstrap();
+    }
+
+    /**
+     * 回收资源
+     */
+    public static function recovery()
+    {
+        self::$_singleton = null;
     }
 
     /**
@@ -1152,18 +1172,6 @@ final class Command
             if (empty($output)) {
                 $output = new Output();
             }
-
-            if ($globalCommand) {
-                $commands = to_array($globalCommand);
-                foreach ($commands as $command) {
-
-                    if (is_string($command)) {
-                        $command = new $command();
-                    }
-
-                    $this->addCommand($command, true);
-                }
-            }
         } catch (InputCommandFormatException $e) {
             if (Style::isEnableAnsi()) {
                 $error = Style::tags()->apply(sprintf('<red>%s</red>', $e->getMessage()));
@@ -1216,11 +1224,11 @@ final class Command
         $this->groupRegisterCommand($group, $name);
         $this->commands[$commandName] = [
             'command' => $closure,
-            'describe' => $describe,
-            'usage' => $usage,
-            'arguments' => $arguments,
-            'optionsDetails' => $options,
-            'example' => $example,
+            'describe' => $describe ?? '',
+            'usage' => $usage ?? '',
+            'arguments' => $arguments ?? [],
+            'optionsDetails' => $options ?? [],
+            'example' => $example ?? '',
         ];
     }
 
@@ -1254,6 +1262,12 @@ final class Command
         $this->commands[$commandName] = [
             'command' => $command,
             'options' => $this->commandOptionsParse($command),
+            'optionsDetails' => class_get($command, 'options') ?? [],
+            'describe' => class_get($command, 'describe') ?? '',
+            'usage' => class_get($command, 'usage') ?? '',
+            'arguments' => class_get($command, 'arguments') ?? [],
+            'example' => class_get($command, 'example') ?? '',
+            'bindOpts' => class_get($command, 'bindOpts') ?? [],
         ];
     }
 

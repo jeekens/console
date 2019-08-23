@@ -42,6 +42,12 @@ class HelpCommand implements CommandInterface
     }
 
 
+    /**
+     * @return bool
+     *
+     * @throws \Jeekens\Console\Exception\Exception
+     * @throws \Jeekens\Console\Exception\UnknownColorException
+     */
     public function handle()
     {
         $commandName = Command::getFullCommandName();
@@ -62,21 +68,25 @@ class HelpCommand implements CommandInterface
         return false;
     }
 
+    /**
+     * @throws \Jeekens\Console\Exception\Exception
+     * @throws \Jeekens\Console\Exception\UnknownColorException
+     */
     protected function noCommand()
     {
         $commandInfos = Command::getCommandInfos();
+        Command::line('<yellow>Command List</yellow>: ');
+        Command::line();
         $table = new Table();
-        $table->addHeader('<yellow>Command List</yellow>')
-            ->addTable()
-            ->addHeader('Command Name')
-            ->addHeader('Describe')
-            ->addHeader('Usage');
+        $table->addHeader('<light_red>Command Name</light_red>')
+            ->addHeader('<light_red>Describe</light_red>')
+            ->addHeader('<light_red>Usage</light_red>');
 
         foreach ($commandInfos as $commandName => $item) {
             $table->addRow()
-                ->addColumn(sprintf('%s', $commandName))
-                ->addColumn(class_get($item['command'], 'describe') ?? '')
-                ->addColumn(class_get($item['command'], 'usage') ?? '');
+                ->addColumn(sprintf('<cyan>%s</cyan>', $commandName))
+                ->addColumn($item['describe'])
+                ->addColumn($item['usage']);
         }
 
         $table->showAllBorders()->display();
@@ -91,46 +101,44 @@ class HelpCommand implements CommandInterface
     protected function command(string $commandName)
     {
         $commandInfos = Command::getCommandInfos();
-        if (isset($commandInfos[$commandName]) && $command = $commandInfos[$commandName]['command']) {
+        if (isset($commandInfos[$commandName]) && $command = $commandInfos[$commandName]) {
             $group = Command::getCommandGroup();
             $table = new Table();
-            $table->addHeader($commandName);
+            $table->addHeader(sprintf('<cyan>%s</cyan>', $commandName));
             $globalOpts = Command::getBindOpts();
             $groupOpts = Command::getGroupBindOpts();
 
-            if (($describe = class_get($command, 'describe'))
-                && is_string($describe) && $describe != '') {
+            if (trim($command['describe']) != '') {
                 $table->addTable()
                     ->addRow(null, true)
                     ->addColumn('<yellow>Describe</yellow>:')
                     ->addRow()
-                    ->addColumn('  '.$describe);
+                    ->addColumn('  ' . $command['describe']);
             }
 
-            if (($usage = class_get($command, 'usage'))
-                && is_string($usage) && $usage != '') {
+            if (trim($command['usage']) != '') {
                 $table->addTable()
                     ->addRow(null, true)
                     ->addColumn('<yellow>Usage</yellow>:')
                     ->addRow()
-                    ->addColumn('  '.$usage);
+                    ->addColumn('  ' . $command['usage']);
             }
 
-            if (($arguments = class_get($command, 'arguments'))) {
+            if (! empty($command['arguments'])) {
                 $table->addTable()
                     ->addRow(null, true)
                     ->addColumn('<yellow>Arguments</yellow>:');
 
                 $i = 1;
 
-                foreach ($arguments as $des) {
+                foreach ($command['arguments'] as $des) {
                     $table->addRow()
                         ->addColumn(sprintf(' <green>arg%s</green>', $i))
-                        ->addColumn('  '.$des);
+                        ->addColumn('  ' . $des);
                 }
             }
 
-            if (! empty($globalOpts)) {
+            if (!empty($globalOpts)) {
                 $table->addTable()
                     ->addRow(null, true)
                     ->addColumn('<yellow>Global Options</yellow>:');
@@ -155,25 +163,24 @@ class HelpCommand implements CommandInterface
                 }
             }
 
-            if (($options = class_get($command, 'options'))) {
+            if (! empty($command['optionsDetails'])) {
                 $table->addTable()
                     ->addRow(null, true)
                     ->addColumn('<yellow>Options</yellow>:');
 
-                foreach ($options as $opt => $des) {
+                foreach ($command['optionsDetails'] as $opt => $des) {
                     $table->addRow()
                         ->addColumn(sprintf(' <green>%s</green>', $opt))
                         ->addColumn($des);
                 }
             }
 
-            if (($example = class_get($command, 'example'))
-                && is_string($example) && $example != '') {
+            if (trim($command['example']) != '') {
                 $table->addTable()
                     ->addRow(null, true)
                     ->addColumn('<yellow>Example</yellow>:')
                     ->addRow()
-                    ->addColumn('  '.$example);
+                    ->addColumn('  ' . $command['example']);
             }
 
             $table->hideBorder()
