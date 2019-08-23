@@ -164,7 +164,7 @@ final class Command
                 $globalCommand = self::$defaultGlobalCommands;
             }
 
-            self::$_singleton = new self($globalCommand, $input, $output);
+            self::$_singleton = new self($input, $output);
 
             if ($globalCommand) {
                 $commands = to_array($globalCommand);
@@ -1151,11 +1151,10 @@ final class Command
     /**
      * Command constructor.
      *
-     * @param null $globalCommand
      * @param Input|null $input
      * @param Output|null $output
      */
-    private function __construct($globalCommand = null, ?Input $input = null, ?Output $output = null)
+    private function __construct(?Input $input = null, ?Output $output = null)
     {
         if (PHP_SAPI != 'cli') {
             exit(0);
