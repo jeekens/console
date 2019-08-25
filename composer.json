@@ -13,7 +13,7 @@
   "require": {
     "php": ">7.2",
     "ext-mbstring": "*",
-    "jeekens/basics": "~1.1.0"
+    "jeekens/basics": "~1.2.0"
   },
   "autoload": {
     "psr-4": {
