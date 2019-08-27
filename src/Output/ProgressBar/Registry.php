@@ -12,7 +12,7 @@ class Registry
     /**
      * Registry
      */
-    public $registry = array();
+    public $registry = [];
 
     /**
      * Sets the value for a key

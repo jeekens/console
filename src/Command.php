@@ -4,6 +4,7 @@
 namespace Jeekens\Console;
 
 
+use RuntimeException;
 use function array_key_exists;
 use function array_merge;
 use function class_get;
@@ -908,7 +909,7 @@ final class Command
             }
         }
 
-        throw new \RuntimeException('Can not invoke bash shell env');
+        throw new RuntimeException('Can not invoke bash shell env');
     }
 
     /**

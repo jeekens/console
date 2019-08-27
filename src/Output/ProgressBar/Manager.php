@@ -3,6 +3,15 @@
 namespace Jeekens\Console\Output\ProgressBar;
 
 use Jeekens\Console\Command;
+use function array_fill;
+use function implode;
+use function intval;
+use function is_int;
+use function ksort;
+use function number_format;
+use function sprintf;
+use function str_replace;
+use function strlen;
 
 /**
  * Class Manager
@@ -44,7 +53,7 @@ EOF;
      */
     public function __construct($current, $max, $width = 80, $doneBarElementCharacter = '=', $remainingBarElementCharacter = '-', $currentPositionCharacter = '>')
     {
-        $advancement    = array($current => time());
+        $advancement    = [$current => time()];
         $this->registry = new Registry();
         $this->registry->setValue('current', $current);
 
@@ -232,7 +241,8 @@ EOF;
     }
 
     /**
-     * Advances the progress bar with one step.
+     * @throws \Jeekens\Console\Exception\Exception
+     * @throws \Jeekens\Console\Exception\UnknownColorException
      */
     public function advance()
     {
